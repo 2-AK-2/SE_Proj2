@@ -1,50 +1,121 @@
-name: Ola Cab Aggregator CI
+# .github/workflows/ci.yml
 
-on:
-  push:
-    branches: [ main, driver-* ]
-  pull_request:
-    branches: [ main ]
+name: 'Project CI/CD Pipeline'
+
+on: [push, pull_request]
+
+# Set the default working directory for all jobs to './react'
+defaults:
+  run:
+    working-directory: ./react
 
 jobs:
+  # Job 1: Build, Lint, Test, and Scan
   build-and-test:
+    name: 'Build, Lint, Test & Scan'
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x]
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - name: 'Setup Node.js'
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: react/package-lock.json # Point cache to the correct file
 
-      # Backend setup
-      - name: Install Backend Dependencies
-        working-directory: ./backend
-        run: npm install
+      # --- STAGE 1: BUILD ---
+      - name: 'Install Dependencies'
+        run: npm ci # This now runs inside the './react' folder
 
-      - name: Run Backend Lint & Tests
-        working-directory: ./backend
-        run: |
-          npm run lint || true
-          npm run test || true
-
-      # Frontend setup
-      - name: Install Frontend Dependencies
-        working-directory: ./frontend
-        run: npm install
-
-      - name: Build Frontend
-        working-directory: ./frontend
+      - name: 'Run Build Script'
         run: npm run build
 
-      - name: Run Frontend Lint & Tests
-        working-directory: ./frontend
+      # --- STAGE 2 & 3: TEST & COVERAGE ---
+      - name: 'Run Tests & Generate Coverage'
+        run: npm test -- --coverage
+        # Make sure you add the coverageThreshold to your react/package.json
+        # "jest": { "coverageThreshold": { "global": { "lines": 75 }}}
+
+      - name: 'Upload Coverage Report (Artifact 1)'
+        # This saves the HTML coverage report, required for the rubric
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: react/coverage/ # Path is now react/coverage
+
+      # --- STAGE 4: LINT ---
+      - name: 'Run Lint Check'
+        # Run lint and tell it to output a file
+        run: npm run lint -- --output-file ../lint-report.txt --format=checkstyle
+        continue-on-error: true # Continue so we can upload the report
+
+      - name: 'Upload Lint Report (Artifact 2)'
+        # We upload the report (which is in the root)
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          # Note: The path is ../lint-report.txt because the command ran in ./react
+          path: lint-report.txt
+
+      # --- STAGE 5: SECURITY ---
+      - name: 'Run Security Scan (npm audit)'
+        # Run audit and save the JSON report in the root
+        run: npm audit --audit-level=high --json > ../security-report.json
+        continue-on-error: true # Continue so we can upload the report
+
+      - name: 'Upload Security Report (Artifact 3)'
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: security-report.json
+
+  # --- CD STAGE: DEPLOYMENT ARTIFACT ---
+  # This job creates the final .zip file required by the rubric
+  package-artifact:
+    name: 'Create Deployment Artifact'
+    runs-on: ubuntu-latest
+    # This job ONLY runs if the 'build-and-test' job passed
+    needs: [build-and-test]
+
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      # Download all the reports we saved earlier
+      - name: 'Download Lint Report'
+        uses: actions/download-artifact@v4
+        with:
+          name: lint-report
+          path: reports/lint
+      - name: 'Download Security Report'
+        uses: actions/download-artifact@v4
+        with:
+          name: security-report
+          path: reports/security
+      - name: 'Download Coverage Report'
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: reports/coverage
+
+      # Create the final zip file
+      - name: 'Create Deployment Package'
         run: |
-          npm run lint || true
-          npm run test || true
+          mkdir -p deployment-package/src
+          # Copy source code, readme, and package files
+          cp -r react/src/* deployment-package/src/
+          cp react/package.json react/package-lock.json deployment-package/
+          cp README.md deployment-package/
+          # Copy all the reports
+          cp -r reports deployment-package/
+          # Zip it all up
+          zip -r deployment-package.zip deployment-package
+      
+      - name: 'Upload Final Deployment Artifact (Rubric Goal)'
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-package
+          path: deployment-package.zip
