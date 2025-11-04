@@ -2,10 +2,10 @@ name: 'Project CI/CD Pipeline'
 
 on: [push, pull_request]
 
-# Set the default working directory for all jobs to './react'
+# Set the default working directory for all jobs to './react_ak'
 defaults:
   run:
-    working-directory: ./react
+    working-directory: ./react_ak
 
 jobs:
   # Job 1: Build, Lint, Test, and Scan
@@ -18,12 +18,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 'Setup Node.js'
+        # This is the "basic" version without caching to pass the setup phase
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'yarn'
-          # This is the corrected line, pointing to the yarn.lock file
-          cache-dependency-path: react/yarn.lock
 
       # --- STAGE 1: BUILD ---
       - name: 'Install Dependencies'
@@ -36,14 +34,15 @@ jobs:
       # --- STAGE 2 & 3: TEST & COVERAGE ---
       - name: 'Run Tests & Generate Coverage'
         run: yarn test --coverage
-        # Make sure you add the coverageThreshold to your react/package.json
+        # Make sure you add the coverageThreshold to your react_ak/package.json
         # "jest": { "coverageThreshold": { "global": { "lines": 75 }}}
 
       - name: 'Upload Coverage Report (Artifact 1)'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: react/coverage/
+          # Correct path using the react_ak folder
+          path: react_ak/coverage/
 
       # --- STAGE 4: LINT ---
       - name: 'Run Lint Check'
@@ -59,7 +58,6 @@ jobs:
       # --- STAGE 5: SECURITY ---
       - name: 'Run Security Scan (yarn audit)'
         # Run audit and save the JSON report
-        # Note: yarn audit has different output, we'll pipe it
         run: yarn audit --json > ../security-report.json
         continue-on-error: true # Continue so we can upload the report
 
@@ -100,9 +98,9 @@ jobs:
       - name: 'Create Deployment Package'
         run: |
           mkdir -p deployment-package/src
-          # Copy source code, readme, and package files
-          cp -r react/src/* deployment-package/src/
-          cp react/package.json react/yarn.lock deployment-package/
+          # Copy source code, readme, and package files from react_ak
+          cp -r react_ak/src/* deployment-package/src/
+          cp react_ak/package.json react_ak/yarn.lock deployment-package/
           cp README.md deployment-package/
           # Copy all the reports
           cp -r reports deployment-package/
