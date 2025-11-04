@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Upload } from "lucide-react";
 
 const DriverRegister = ({ onNavigate }) => {
   const [form, setForm] = useState({
@@ -81,6 +80,7 @@ const DriverRegister = ({ onNavigate }) => {
             required
             onChange={handleFileChange}
             className="w-full border p-2 rounded-lg"
+          position="absolute"
           />
         </div>
 
