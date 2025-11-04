@@ -1,5 +1,3 @@
-# .github/workflows/ci.yml
-
 name: 'Project CI/CD Pipeline'
 
 on: [push, pull_request]
@@ -24,6 +22,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+          # This is the corrected line, pointing to the file inside the 'react' folder
           cache-dependency-path: react/package-lock.json
 
       # --- STAGE 1: BUILD ---
@@ -37,7 +36,7 @@ jobs:
       - name: 'Run Tests & Generate Coverage'
         run: npm test -- --coverage
         # Make sure you add the coverageThreshold to your react/package.json
-        # "jest": { "coverageThreshold": { "global": { "lines": 75 }}} 
+        # "jest": { "coverageThreshold": { "global": { "lines": 75 }}}
 
       - name: 'Upload Coverage Report (Artifact 1)'
         # This saves the HTML coverage report, required for the rubric
