@@ -46,7 +46,7 @@ jobs:
 
       # --- STAGE 4: LINT ---
       - name: 'Run Lint Check'
-        run: yarn lint --output-file ../lint-report.txt --format=checkstyle
+        run: yarn lint > ../lint-report.txt 2>&1
         continue-on-error: true # Continue so we can upload the report
 
       - name: 'Upload Lint Report (Artifact 2)'
