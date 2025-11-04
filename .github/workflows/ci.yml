@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: ./react/package-lock.json # Point cache to the correct file
+          cache-dependency-path: react/package-lock.json # Point cache to the correct file
 
       # --- STAGE 1: BUILD ---
       - name: 'Install Dependencies'
