@@ -2,30 +2,33 @@ name: 'Project CI/CD Pipeline'
 
 on: [push, pull_request]
 
-# Set the default working directory for all jobs to './react_ak'
-defaults:
-  run:
-    working-directory: ./react_ak
+# NO DEFAULTS AT THE TOP LEVEL
 
 jobs:
   # Job 1: Build, Lint, Test, and Scan
   build-and-test:
     name: 'Build, Lint, Test & Scan'
     runs-on: ubuntu-latest
+    
+    # Defaults are moved INSIDE this job
+    defaults:
+      run:
+        working-directory: ./react_ak
 
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
 
       - name: 'Setup Node.js'
-        # This is the "basic" version without caching to pass the setup phase
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          # Add caching back in, pointing to the correct file
+          cache: 'yarn'
+          cache-dependency-path: react_ak/yarn.lock
 
       # --- STAGE 1: BUILD ---
       - name: 'Install Dependencies'
-        # Use yarn install, which is the equivalent of 'npm ci'
         run: yarn install --frozen-lockfile
 
       - name: 'Run Build Script'
@@ -41,11 +44,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          # Correct path using the react_ak folder
           path: react_ak/coverage/
 
       # --- STAGE 4: LINT ---
       - name: 'Run Lint Check'
+        # This command is more robust: it creates the file even if lint fails
         run: yarn lint > ../lint-report.txt 2>&1
         continue-on-error: true # Continue so we can upload the report
 
@@ -57,7 +60,6 @@ jobs:
 
       # --- STAGE 5: SECURITY ---
       - name: 'Run Security Scan (yarn audit)'
-        # Run audit and save the JSON report
         run: yarn audit --json > ../security-report.json
         continue-on-error: true # Continue so we can upload the report
 
@@ -72,6 +74,7 @@ jobs:
     name: 'Create Deployment Artifact'
     runs-on: ubuntu-latest
     needs: [build-and-test]
+    # This job has no 'defaults', so it runs from the REPO ROOT
 
     steps:
       - name: 'Checkout Repository'
@@ -96,6 +99,7 @@ jobs:
 
       # Create the final zip file
       - name: 'Create Deployment Package'
+        # These paths are now correct because we are in the root
         run: |
           mkdir -p deployment-package/src
           # Copy source code, readme, and package files from react_ak
