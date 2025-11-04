@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ola-style base background */
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-olaGray to-white text-olaBlack min-h-screen;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+/* Buttons */
+button {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(18, 18, 18, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(18, 18, 18, 0.6);
+}
