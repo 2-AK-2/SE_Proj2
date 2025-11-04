@@ -21,48 +21,46 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          # This is the corrected line, pointing to the file inside the 'react' folder
-          cache-dependency-path: react/package-lock.json
+          cache: 'yarn'
+          # This is the corrected line, pointing to the yarn.lock file
+          cache-dependency-path: react/yarn.lock
 
       # --- STAGE 1: BUILD ---
       - name: 'Install Dependencies'
-        run: npm ci # This now runs inside the './react' folder
+        # Use yarn install, which is the equivalent of 'npm ci'
+        run: yarn install --frozen-lockfile
 
       - name: 'Run Build Script'
-        run: npm run build
+        run: yarn build
 
       # --- STAGE 2 & 3: TEST & COVERAGE ---
       - name: 'Run Tests & Generate Coverage'
-        run: npm test -- --coverage
+        run: yarn test --coverage
         # Make sure you add the coverageThreshold to your react/package.json
         # "jest": { "coverageThreshold": { "global": { "lines": 75 }}}
 
       - name: 'Upload Coverage Report (Artifact 1)'
-        # This saves the HTML coverage report, required for the rubric
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: react/coverage/ # Path is now react/coverage
+          path: react/coverage/
 
       # --- STAGE 4: LINT ---
       - name: 'Run Lint Check'
-        # Run lint and tell it to output a file
-        run: npm run lint -- --output-file ../lint-report.txt --format=checkstyle
+        run: yarn lint --output-file ../lint-report.txt --format=checkstyle
         continue-on-error: true # Continue so we can upload the report
 
       - name: 'Upload Lint Report (Artifact 2)'
-        # We upload the report (which is in the root)
         uses: actions/upload-artifact@v4
         with:
           name: lint-report
-          # Note: The path is ../lint-report.txt because the command ran in ./react
           path: lint-report.txt
 
       # --- STAGE 5: SECURITY ---
-      - name: 'Run Security Scan (npm audit)'
-        # Run audit and save the JSON report in the root
-        run: npm audit --audit-level=high --json > ../security-report.json
+      - name: 'Run Security Scan (yarn audit)'
+        # Run audit and save the JSON report
+        # Note: yarn audit has different output, we'll pipe it
+        run: yarn audit --json > ../security-report.json
         continue-on-error: true # Continue so we can upload the report
 
       - name: 'Upload Security Report (Artifact 3)'
@@ -72,11 +70,9 @@ jobs:
           path: security-report.json
 
   # --- CD STAGE: DEPLOYMENT ARTIFACT ---
-  # This job creates the final .zip file required by the rubric
   package-artifact:
     name: 'Create Deployment Artifact'
     runs-on: ubuntu-latest
-    # This job ONLY runs if the 'build-and-test' job passed
     needs: [build-and-test]
 
     steps:
@@ -106,7 +102,7 @@ jobs:
           mkdir -p deployment-package/src
           # Copy source code, readme, and package files
           cp -r react/src/* deployment-package/src/
-          cp react/package.json react/package-lock.json deployment-package/
+          cp react/package.json react/yarn.lock deployment-package/
           cp README.md deployment-package/
           # Copy all the reports
           cp -r reports deployment-package/
