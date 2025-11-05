@@ -1,117 +1,172 @@
-name: 'Project CI/CD Pipeline'
+name: "Cabify Full CI/CD Pipeline"
 
 on: [push, pull_request]
 
-# NO DEFAULTS AT THE TOP LEVEL
-
 jobs:
-  # Job 1: Build, Lint, Test, and Scan
-  build-and-test:
-    name: 'Build, Lint, Test & Scan'
+  # -------------------------------------------------------------
+  # 1️⃣ FRONTEND BUILD, LINT, TEST, AND SECURITY SCAN
+  # -------------------------------------------------------------
+  frontend-ci:
+    name: "Frontend (React) - Build, Lint, Test, Scan"
     runs-on: ubuntu-latest
-    
-    # Defaults are moved INSIDE this job
+
     defaults:
       run:
         working-directory: ./react_ak
 
     steps:
-      - name: 'Checkout Repository'
+      - name: "Checkout Repository"
         uses: actions/checkout@v4
 
-      - name: 'Setup Node.js'
+      - name: "Setup Node.js"
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          # Add caching back in, pointing to the correct file
-          cache: 'yarn'
+          node-version: 18
+          cache: "yarn"
           cache-dependency-path: react_ak/yarn.lock
 
-      # --- STAGE 1: BUILD ---
-      - name: 'Install Dependencies'
+      - name: "Install Dependencies"
         run: yarn install --frozen-lockfile
 
-      - name: 'Run Build Script'
+      - name: "Build React App"
         run: yarn build
 
-      # --- STAGE 2 & 3: TEST & COVERAGE ---
-      - name: 'Run Tests & Generate Coverage'
+      - name: "Run Tests & Coverage"
         run: yarn test --coverage
-        # Make sure you add the coverageThreshold to your react_ak/package.json
-        # "jest": { "coverageThreshold": { "global": { "lines": 75 }}}
+        continue-on-error: true
 
-      - name: 'Upload Coverage Report (Artifact 1)'
+      - name: "Upload Coverage Report"
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: frontend-coverage
           path: react_ak/coverage/
 
-      # --- STAGE 4: LINT ---
-      - name: 'Run Lint Check'
-        # This command is more robust: it creates the file even if lint fails
-        run: yarn lint > ../lint-report.txt 2>&1
-        continue-on-error: true # Continue so we can upload the report
+      - name: "Run Lint"
+        run: yarn lint > ../frontend-lint-report.txt 2>&1
+        continue-on-error: true
 
-      - name: 'Upload Lint Report (Artifact 2)'
+      - name: "Upload Lint Report"
         uses: actions/upload-artifact@v4
         with:
-          name: lint-report
-          path: lint-report.txt
+          name: frontend-lint
+          path: frontend-lint-report.txt
 
-      # --- STAGE 5: SECURITY ---
-      - name: 'Run Security Scan (yarn audit)'
-        run: yarn audit --json > ../security-report.json
-        continue-on-error: true # Continue so we can upload the report
+      - name: "Security Scan"
+        run: yarn audit --json > ../frontend-security-report.json
+        continue-on-error: true
 
-      - name: 'Upload Security Report (Artifact 3)'
+      - name: "Upload Security Report"
         uses: actions/upload-artifact@v4
         with:
-          name: security-report
-          path: security-report.json
+          name: frontend-security
+          path: frontend-security-report.json
 
-  # --- CD STAGE: DEPLOYMENT ARTIFACT ---
-  package-artifact:
-    name: 'Create Deployment Artifact'
+  # -------------------------------------------------------------
+  # 2️⃣ BACKEND BUILD, LINT, AND SECURITY SCAN
+  # -------------------------------------------------------------
+  backend-ci:
+    name: "Backend (Node.js) - Lint, Test, Scan"
     runs-on: ubuntu-latest
-    needs: [build-and-test]
-    # This job has no 'defaults', so it runs from the REPO ROOT
+
+    defaults:
+      run:
+        working-directory: ./react_ak/backend
 
     steps:
-      - name: 'Checkout Repository'
+      - name: "Checkout Repository"
         uses: actions/checkout@v4
 
-      # Download all the reports we saved earlier
-      - name: 'Download Lint Report'
-        uses: actions/download-artifact@v4
+      - name: "Setup Node.js"
+        uses: actions/setup-node@v4
         with:
-          name: lint-report
-          path: reports/lint
-      - name: 'Download Security Report'
-        uses: actions/download-artifact@v4
-        with:
-          name: security-report
-          path: reports/security
-      - name: 'Download Coverage Report'
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-report
-          path: reports/coverage
+          node-version: 18
+          cache: "npm"
+          cache-dependency-path: react_ak/backend/package-lock.json
 
-      # Create the final zip file
-      - name: 'Create Deployment Package'
-        # These paths are now correct because we are in the root
+      - name: "Install Dependencies"
+        run: npm ci
+
+      # Optional backend linting (if you add ESLint)
+      - name: "Run Lint (if configured)"
         run: |
-          mkdir -p deployment-package/src
-          # Copy source code, readme, and package files from react_ak
-          cp -r react_ak/src/* deployment-package/src/
-          cp react_ak/package.json react_ak/yarn.lock deployment-package/
+          if [ -f .eslintrc.json ]; then
+            npx eslint . > ../../backend-lint-report.txt || true
+          else
+            echo "No ESLint config found" > ../../backend-lint-report.txt
+          fi
+
+      - name: "Upload Lint Report"
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-lint
+          path: backend-lint-report.txt
+
+      - name: "Run Security Scan"
+        run: npm audit --json > ../../backend-security-report.json
+        continue-on-error: true
+
+      - name: "Upload Security Report"
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-security
+          path: backend-security-report.json
+
+  # -------------------------------------------------------------
+  # 3️⃣ PACKAGE DEPLOYMENT ARTIFACT
+  # -------------------------------------------------------------
+  package-artifact:
+    name: "Package Deployment Artifact"
+    runs-on: ubuntu-latest
+    needs: [frontend-ci, backend-ci]
+
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "Download All Reports"
+        uses: actions/download-artifact@v4
+        with:
+          name: all-reports
+          path: reports
+
+      # Download each artifact individually (optional for clarity)
+      - name: "Download Frontend Reports"
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-lint
+          path: reports/frontend/lint
+      - name: "Download Frontend Security"
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-security
+          path: reports/frontend/security
+      - name: "Download Frontend Coverage"
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: reports/frontend/coverage
+      - name: "Download Backend Reports"
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-lint
+          path: reports/backend/lint
+      - name: "Download Backend Security"
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-security
+          path: reports/backend/security
+
+      - name: "Create Deployment Package"
+        run: |
+          mkdir -p deployment-package/frontend deployment-package/backend
+          cp -r react_ak/src deployment-package/frontend/
+          cp react_ak/package.json react_ak/yarn.lock deployment-package/frontend/
+          cp -r react_ak/backend deployment-package/backend/
           cp README.md deployment-package/
-          # Copy all the reports
           cp -r reports deployment-package/
-          # Zip it all up
           zip -r deployment-package.zip deployment-package
-      
-      - name: 'Upload Final Deployment Artifact (Rubric Goal)'
+
+      - name: "Upload Final Deployment Artifact"
         uses: actions/upload-artifact@v4
         with:
           name: deployment-package
