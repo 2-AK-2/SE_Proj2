@@ -2,27 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ola-style base background */
 @layer base {
   body {
-    @apply bg-gradient-to-br from-olaGray to-white text-olaBlack min-h-screen;
-    font-family: 'Inter', sans-serif;
+    @apply flex items-center justify-center min-h-screen;
+    font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    margin: 0;
   }
 }
 
-/* Buttons */
+.app-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-wrapper {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2.5rem 3rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+  max-width: 400px;
+  width: 90%;
+}
+
+.brand-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #ffd700;
+}
+
+.input-label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+  color: #ddd;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  border: none;
+  border-radius: 10px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 1rem;
+}
+
+.input-field::placeholder {
+  color: #ccc;
+}
+
+.primary-btn {
+  width: 100%;
+  padding: 0.9rem;
+  background: #ffd700;
+  border: none;
+  border-radius: 10px;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.primary-btn:hover {
+  background: #f0c500;
+}
+
 button {
   @apply transition-all duration-200 ease-in-out;
 }
 
-/* Scrollbar polish */
+.message {
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  color: #fff;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(18, 18, 18, 0.3);
+  background-color: rgba(255, 255, 255, 0.3);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(18, 18, 18, 0.6);
+  background-color: rgba(255, 255, 255, 0.6);
 }
