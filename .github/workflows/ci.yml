@@ -1,0 +1,132 @@
+name: 'Project CI/CD Pipeline'
+
+on: [push, pull_request]
+
+jobs:
+  # ======================================
+  # JOB 1: BUILD, LINT, TEST, SECURITY SCAN
+  # ======================================
+  build-and-test:
+    name: 'Build, Lint, Test & Scan'
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./react_ak
+
+    steps:
+      # --- CHECKOUT REPO ---
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      # --- SETUP NODE ---
+      - name: 'Setup Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+          cache-dependency-path: react_ak/yarn.lock
+
+      # --- INSTALL DEPENDENCIES ---
+      - name: 'Install Dependencies'
+        run: yarn install --frozen-lockfile
+
+      # --- BUILD PROJECT ---
+      - name: 'Run Build Script'
+        run: yarn build
+
+      # --- TEST & COVERAGE ---
+      - name: 'Run Tests & Generate Coverage'
+        run: yarn test --coverage
+        continue-on-error: true
+
+      - name: 'Upload Coverage Report'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: react_ak/coverage/
+
+      # --- LINT (FRONTEND: ESLINT) ---
+      - name: 'Run Lint Check (ESLint)'
+        run: |
+          yarn lint --max-warnings=0 > ../lint-report.txt 2>&1 || true
+        continue-on-error: true
+
+      - name: 'Upload Lint Report'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: lint-report.txt
+
+      # --- SECURITY SCAN ---
+      - name: 'Run Security Scan (yarn audit)'
+        run: |
+          yarn audit --json > ../security-report.json || true
+        continue-on-error: true
+
+      - name: 'Upload Security Report'
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: security-report.json
+
+      # --- OPTIONAL: PYTHON BACKEND LINT ---
+      # Uncomment this block if you have Python backend scripts
+      # - name: 'Run Python Lint (pylint)'
+      #   run: |
+      #     pip install pylint
+      #     pylint backend/**/*.py > ../pylint-report.txt || true
+      #   continue-on-error: true
+      #
+      # - name: 'Upload Python Lint Report'
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: pylint-report
+      #     path: pylint-report.txt
+
+  # ======================================
+  # JOB 2: PACKAGE DEPLOYMENT ARTIFACT
+  # ======================================
+  package-artifact:
+    name: 'Create Deployment Artifact'
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      # Download all previous reports
+      - name: 'Download Lint Report'
+        uses: actions/download-artifact@v4
+        with:
+          name: lint-report
+          path: reports/lint
+
+      - name: 'Download Security Report'
+        uses: actions/download-artifact@v4
+        with:
+          name: security-report
+          path: reports/security
+
+      - name: 'Download Coverage Report'
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: reports/coverage
+
+      # Create final ZIP
+      - name: 'Create Deployment Package'
+        run: |
+          mkdir -p deployment-package/src
+          cp -r react_ak/src/* deployment-package/src/
+          cp react_ak/package.json react_ak/yarn.lock deployment-package/
+          cp README.md deployment-package/
+          cp -r reports deployment-package/
+          zip -r deployment-package.zip deployment-package
+      
+      - name: 'Upload Final Deployment Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-package
+          path: deployment-package.zip
