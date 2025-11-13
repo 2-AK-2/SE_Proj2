@@ -1,50 +1,69 @@
-import db from "../db.js";
+import db from "../config/db.js";
 import crypto from "crypto";
 
-export const sendOtp = (req, res) => {
-  const { phone } = req.body;
-  if (!phone) return res.status(400).json({ message: "Phone number required" });
+// Generate and send OTP
+export const sendOtp = async (req, res) => {
+  try {
+    const { phone } = req.body;
 
-  const otp = Math.floor(100000 + Math.random() * 900000);
-  const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
-
-  db.query("DELETE FROM otp_verifications WHERE phone = ?", [phone]);
-  db.query(
-    "INSERT INTO otp_verifications (phone, otp, expires_at) VALUES (?, ?, ?)",
-    [phone, otp, expiresAt],
-    err => {
-      if (err) return res.status(500).json({ message: "DB error" });
-      console.log(`📲 OTP for ${phone}: ${otp}`);
-      // Here you’d integrate with Twilio / SMS API to send the OTP.
-      res.json({ message: "OTP sent successfully" });
+    if (!phone || !/^\d{10}$/.test(phone)) {
+      return res.status(400).json({ message: "Valid phone number required" });
     }
-  );
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
+
+    // Optional: hash OTP before storing (better security)
+    const hashedOtp = crypto.createHash("sha256").update(String(otp)).digest("hex");
+
+    await db.execute("DELETE FROM otp_verifications WHERE phone = ?", [phone]);
+    await db.execute(
+      "INSERT INTO otp_verifications (phone, otp, expires_at) VALUES (?, ?, ?)",
+      [phone, hashedOtp, expiresAt]
+    );
+
+    console.log(`📲 OTP for ${phone}: ${otp}`);
+    // TODO: integrate Twilio / SMS API
+
+    res.json({ message: "OTP sent successfully" });
+  } catch (error) {
+    console.error("❌ Error sending OTP:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
-export const verifyOtp = (req, res) => {
-  const { phone, otp } = req.body;
-  db.query(
-    "SELECT * FROM otp_verifications WHERE phone = ? AND otp = ?",
-    [phone, otp],
-    (err, results) => {
-      if (err) return res.status(500).json({ message: "DB error" });
-      if (results.length === 0)
-        return res.status(400).json({ message: "Invalid OTP" });
+// Verify OTP
+export const verifyOtp = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
 
-      const record = results[0];
-      if (Date.now() > record.expires_at)
-        return res.status(400).json({ message: "OTP expired" });
-
-      // Create rider account if not exists
-      db.query(
-        "INSERT IGNORE INTO riders (phone) VALUES (?)",
-        [phone],
-        err2 => {
-          if (err2) return res.status(500).json({ message: "DB error" });
-          db.query("DELETE FROM otp_verifications WHERE phone = ?", [phone]);
-          res.json({ message: "Registration successful" });
-        }
-      );
+    if (!phone || !otp) {
+      return res.status(400).json({ message: "Phone and OTP required" });
     }
-  );
+
+    const hashedOtp = crypto.createHash("sha256").update(String(otp)).digest("hex");
+
+    const [rows] = await db.execute(
+      "SELECT * FROM otp_verifications WHERE phone = ? AND otp = ?",
+      [phone, hashedOtp]
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    const record = rows[0];
+    if (Date.now() > record.expires_at) {
+      await db.execute("DELETE FROM otp_verifications WHERE phone = ?", [phone]);
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    await db.execute("INSERT IGNORE INTO riders (phone) VALUES (?)", [phone]);
+    await db.execute("DELETE FROM otp_verifications WHERE phone = ?", [phone]);
+
+    res.json({ message: "Registration successful" });
+  } catch (error) {
+    console.error("❌ Error verifying OTP:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };

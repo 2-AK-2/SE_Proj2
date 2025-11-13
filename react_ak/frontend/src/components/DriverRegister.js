@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Upload } from "lucide-react";
 
 const DriverRegister = ({ onNavigate }) => {
   const [form, setForm] = useState({
@@ -43,6 +42,7 @@ const DriverRegister = ({ onNavigate }) => {
           className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-olaYellow"
           onChange={(e) => setForm({ ...form, name: e.target.value })}
         />
+
         <input
           type="email"
           placeholder="Email"
@@ -50,6 +50,7 @@ const DriverRegister = ({ onNavigate }) => {
           className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-olaYellow"
           onChange={(e) => setForm({ ...form, email: e.target.value })}
         />
+
         <input
           type="password"
           placeholder="Password"
@@ -57,6 +58,7 @@ const DriverRegister = ({ onNavigate }) => {
           className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-olaYellow"
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
+
         <div>
           <label className="block text-gray-700 font-semibold mb-1">
             Upload Driver License
@@ -70,6 +72,7 @@ const DriverRegister = ({ onNavigate }) => {
             className="w-full border p-2 rounded-lg"
           />
         </div>
+
         <div>
           <label className="block text-gray-700 font-semibold mb-1">
             Upload Vehicle Documents

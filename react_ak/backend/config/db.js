@@ -1,20 +1,23 @@
-import mysql from "mysql2";
+// config/db.js
+import mysql from "mysql2/promise";
 import dotenv from "dotenv";
+
 dotenv.config();
 
-const db = mysql.createConnection({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASS || "akshaya",
-  database: process.env.DB_NAME || "ola_driver_db",
-});
+let db;
 
-db.connect((err) => {
-  if (err) {
-    console.error("❌ MySQL Connection Failed:", err.message);
-  } else {
-    console.log("✅ Connected to MySQL Database");
-  }
-});
+try {
+  db = await mysql.createConnection({
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "",   // ❗ FIXED
+    database: process.env.DB_NAME || "cabify",
+  });
+
+  console.log("✅ Connected to MySQL Database");
+} catch (err) {
+  console.error("❌ MySQL Connection Failed:", err.message);
+  process.exit(1);
+}
 
 export default db;
