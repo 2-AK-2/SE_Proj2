@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { authAPI } from "../api/api";
 import Loader from "./Loader";
 
-function RiderSignup() {
+export default function RiderSignup() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -43,45 +43,67 @@ function RiderSignup() {
   };
 
   return (
-    <div className="app-container">
-      <div className="form-wrapper">
-        <h1 className="brand-title">🚖 Cabify Rider Signup</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-olaGray to-white p-4">
+      <div className="bg-white shadow-soft rounded-2xl p-8 w-full max-w-md border border-olaGray">
 
-        <label className="input-label">Phone Number</label>
+        <h1 className="text-3xl font-bold text-olaBlack text-center mb-6">
+          🚖 Cabify Rider Signup
+        </h1>
+
+        {/* Phone Input */}
+        <label className="block text-gray-700 font-semibold mb-1">
+          Phone Number
+        </label>
         <input
           type="text"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="Enter 10-digit phone number"
-          className="input-field"
+          className="w-full border border-gray-300 rounded-lg p-3 mb-4 focus:ring-2 focus:ring-olaYellow"
         />
 
+        {/* Button — Send OTP */}
         {!otpSent && (
-          <button onClick={sendOtp} className="primary-btn">
+          <button
+            onClick={sendOtp}
+            className="w-full bg-olaYellow text-olaBlack font-semibold py-3 rounded-lg hover:bg-yellow-400 transition"
+          >
             {loading ? <Loader /> : "Send OTP"}
           </button>
         )}
 
+        {/* OTP Input */}
         {otpSent && (
-          <>
-            <label className="input-label">Enter OTP</label>
+          <div className="mt-4">
+            <label className="block text-gray-700 font-semibold mb-1">
+              Enter OTP
+            </label>
+
             <input
               type="text"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               placeholder="Enter 6-digit OTP"
-              className="input-field"
+              className="w-full border border-gray-300 rounded-lg p-3 mb-4 focus:ring-2 focus:ring-olaYellow"
             />
-            <button onClick={verifyOtp} className="primary-btn">
+
+            {/* Verify OTP Button */}
+            <button
+              onClick={verifyOtp}
+              className="w-full bg-olaYellow text-olaBlack font-semibold py-3 rounded-lg hover:bg-yellow-400 transition"
+            >
               {loading ? <Loader /> : "Verify OTP"}
             </button>
-          </>
+          </div>
         )}
 
-        {message && <p className="message">{message}</p>}
+        {/* Message */}
+        {message && (
+          <p className="text-center text-olaBlack font-medium mt-4">
+            {message}
+          </p>
+        )}
       </div>
     </div>
   );
 }
-
-export default RiderSignup;

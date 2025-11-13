@@ -5,7 +5,6 @@ import App from "./App";
 import "./index.css";
 import reportWebVitals from "./reportWebVitals";
 
-// Create React root
 const root = createRoot(document.getElementById("root"));
 
 root.render(
@@ -16,5 +15,4 @@ root.render(
   </React.StrictMode>
 );
 
-// Optional performance reporting
 reportWebVitals();

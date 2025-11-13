@@ -5,7 +5,7 @@ import { getToken } from "../utils/authHelper";
 // ================================
 // 🌐 BASE URL (Environment Support)
 // ================================
-const baseURL = process.env.REACT_APP_API_URL || "http://localhost:5000/api/v1";
+const baseURL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 // Create Axios instance
 const instance = axios.create({
@@ -13,7 +13,9 @@ const instance = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Automatically attach JWT token for protected routes
+// ================================
+// 🔐 Attach token automatically
+// ================================
 instance.interceptors.request.use(
   (config) => {
     const token = getToken();
@@ -24,16 +26,14 @@ instance.interceptors.request.use(
 );
 
 // ================================
-// 📱 AUTH (OTP-based + Cleaned)
+// 📱 OTP AUTH (Phone-based signup/login)
 // ================================
 export const authAPI = {
-  // Send OTP
   sendOtp: async (phone) => {
     const response = await instance.post("/auth/send-otp", { phone });
     return response.data;
   },
 
-  // Verify OTP
   verifyOtp: async (phone, otp) => {
     const response = await instance.post("/auth/verify-otp", { phone, otp });
     return response.data;
@@ -41,7 +41,7 @@ export const authAPI = {
 };
 
 // ================================
-// 👤 RIDER ACCOUNT (JWT Protected)
+// 👤 RIDER AUTH (Email + Password)
 // ================================
 export const riderAPI = {
   register: async (data) => {
@@ -61,7 +61,34 @@ export const riderAPI = {
 };
 
 // ================================
-// 🚗 FARE ESTIMATION
+// 🚗 DRIVER AUTH + DASHBOARD
+// ================================
+export const driverAPI = {
+  register: async (formData) => {
+    const response = await instance.post("/driver/register", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+
+  login: async (credentials) => {
+    const response = await instance.post("/driver/login", credentials);
+    return response.data;
+  },
+
+  getNotifications: async () => {
+    const response = await instance.get("/driver/rides");
+    return response.data;
+  },
+
+  rateRider: async (data) => {
+    const response = await instance.post("/driver/rate", data);
+    return response.data;
+  },
+};
+
+// ================================
+// 🚕 Fare Estimator
 // ================================
 export const fareAPI = {
   estimate: async (pickup, destination) => {
