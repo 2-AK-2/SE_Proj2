@@ -1,26 +1,36 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+
 import driverRoutes from "./routes/driverRoutes.js";
-import authRoutes from "./routes/authRoutes.js"; // ✅ use import instead of require
+import riderRoutes from "./routes/riderRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import fareRoutes from "./routes/fareRoutes.js";
 
 dotenv.config();
 const app = express();
 
-// ✅ Middleware setup
+// Middleware
 app.use(cors());
 app.use(express.json());
+
+// Static uploads
 app.use("/uploads", express.static("uploads"));
 
-// ✅ Routes
-app.use("/api/driver", driverRoutes);
-app.use("/api/rider", authRoutes); // Rider registration (your feature)
+// ROUTES (✔ Corrected)
+app.use("/api/auth", authRoutes);        // OTP only
+app.use("/api/riders", riderRoutes);     // Login + Register + Profile
+app.use("/api/driver", driverRoutes);    // Driver login + register + rating
+app.use("/api/fare", fareRoutes);        // Fare estimator
 
-// ✅ Root route for quick health check
+// Health check
 app.get("/", (req, res) => {
-  res.send("🚗 Cabify backend is running with Rider Registration enabled!");
+  res.send("🚗 Cabify backend running.");
 });
 
-// ✅ Start the server
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`🚀 Server running on port ${PORT}`)
+);

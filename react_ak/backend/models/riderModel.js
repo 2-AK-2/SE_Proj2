@@ -1,7 +1,8 @@
-import db from "../utils/db.js";
+// models/riderModel.js
+import db from "../config/db.js";   // ✅ Fixed import
 
 const riderModel = {
-  // Find a rider by email (for login)
+  // Find a rider by email (for email+password login)
   async findByEmail(email) {
     try {
       const [rows] = await db.execute(
@@ -15,11 +16,11 @@ const riderModel = {
     }
   },
 
-  // Find a rider by ID
+  // Find a rider by ID (for protected routes)
   async findById(id) {
     try {
       const [rows] = await db.execute(
-        "SELECT id, name, email FROM riders WHERE id = ?",
+        "SELECT id, name, email, phone FROM riders WHERE id = ?",
         [id]
       );
       return rows[0] || null;
@@ -29,7 +30,7 @@ const riderModel = {
     }
   },
 
-  // Create a new rider (registration)
+  // Create a new rider (email/password registration)
   async create({ name, email, password }) {
     try {
       const [result] = await db.execute(

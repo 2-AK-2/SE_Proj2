@@ -1,5 +1,12 @@
+// controllers/authController.js
 import db from "../config/db.js";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
+const JWT_SECRET = process.env.JWT_SECRET || "cabify_dev_secret";
+const TOKEN_EXPIRES_IN = process.env.TOKEN_EXPIRES_IN || "2h";
 
 // Generate and send OTP
 export const sendOtp = async (req, res) => {
@@ -13,7 +20,7 @@ export const sendOtp = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000);
     const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
 
-    // Optional: hash OTP before storing (better security)
+    // Hash OTP before storing
     const hashedOtp = crypto.createHash("sha256").update(String(otp)).digest("hex");
 
     await db.execute("DELETE FROM otp_verifications WHERE phone = ?", [phone]);
@@ -23,7 +30,7 @@ export const sendOtp = async (req, res) => {
     );
 
     console.log(`📲 OTP for ${phone}: ${otp}`);
-    // TODO: integrate Twilio / SMS API
+    // TODO: integrate Twilio / SMS API to send OTP
 
     res.json({ message: "OTP sent successfully" });
   } catch (error) {
@@ -32,7 +39,7 @@ export const sendOtp = async (req, res) => {
   }
 };
 
-// Verify OTP
+// Verify OTP and issue JWT
 export const verifyOtp = async (req, res) => {
   try {
     const { phone, otp } = req.body;
@@ -58,10 +65,22 @@ export const verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "OTP expired" });
     }
 
+    // Create rider account if not exists
     await db.execute("INSERT IGNORE INTO riders (phone) VALUES (?)", [phone]);
+
+    // Fetch rider id
+    const [riderRows] = await db.execute("SELECT id, phone FROM riders WHERE phone = ?", [phone]);
+    const rider = riderRows[0];
+
+    // Clean up otp record
     await db.execute("DELETE FROM otp_verifications WHERE phone = ?", [phone]);
 
-    res.json({ message: "Registration successful" });
+    // Issue JWT so frontend can auto-login
+    const token = jwt.sign({ id: rider.id, phone: rider.phone }, JWT_SECRET, {
+      expiresIn: TOKEN_EXPIRES_IN,
+    });
+
+    res.json({ message: "Verification successful", token, rider: { id: rider.id, phone: rider.phone } });
   } catch (error) {
     console.error("❌ Error verifying OTP:", error);
     res.status(500).json({ message: "Internal server error" });

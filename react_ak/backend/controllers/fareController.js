@@ -1,7 +1,6 @@
 // controllers/fareController.js
-import db from "../utils/db.js";
+import db from "../config/db.js";
 
-// Function to calculate fare and ETA
 function calculateFareAndETA(pickup, destination) {
   const baseFare = 30;
   const perKmRate = 12;
@@ -11,17 +10,15 @@ function calculateFareAndETA(pickup, destination) {
   const eta = Math.ceil(distance * 3);
   const fare = baseFare + distance * perKmRate + eta * perMinRate * 0.1;
 
-  return { fare: fare.toFixed(2), eta };
+  return { fare: parseFloat(fare.toFixed(2)), eta };
 }
 
-// POST /estimate
 export const getFareEstimate = async (req, res) => {
   try {
     const { pickup, destination } = req.body;
 
-    if (!pickup || !destination) {
+    if (!pickup || !destination)
       return res.status(400).json({ message: "Pickup and destination required" });
-    }
 
     const { fare, eta } = calculateFareAndETA(pickup, destination);
 
