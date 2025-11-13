@@ -12,7 +12,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: ./react_ak
+        working-directory: ./react_ak/frontend   # ✅ FIXED PATH
 
     steps:
       # --- CHECKOUT REPO ---
@@ -24,32 +24,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'yarn'
-          cache-dependency-path: react_ak/yarn.lock
+          cache: 'npm'     # ✅ Using npm, not yarn
+          cache-dependency-path: react_ak/frontend/package-lock.json   # ✅ FIXED PATH
 
       # --- INSTALL DEPENDENCIES ---
       - name: 'Install Dependencies'
-        run: yarn install --frozen-lockfile
+        run: npm ci        # ✅ Reliable install
 
       # --- BUILD PROJECT ---
       - name: 'Run Build Script'
-        run: yarn build
+        run: npm run build
 
       # --- TEST & COVERAGE ---
       - name: 'Run Tests & Generate Coverage'
-        run: yarn test --coverage
+        run: npm test -- --coverage
         continue-on-error: true
 
       - name: 'Upload Coverage Report'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: react_ak/coverage/
+          path: react_ak/frontend/coverage/     # ✅ FIXED PATH
 
       # --- LINT (FRONTEND: ESLINT) ---
       - name: 'Run Lint Check (ESLint)'
         run: |
-          yarn lint --max-warnings=0 > ../lint-report.txt 2>&1 || true
+          npm run lint --max-warnings=0 > ../lint-report.txt 2>&1 || true
         continue-on-error: true
 
       - name: 'Upload Lint Report'
@@ -59,9 +59,9 @@ jobs:
           path: lint-report.txt
 
       # --- SECURITY SCAN ---
-      - name: 'Run Security Scan (yarn audit)'
+      - name: 'Run Security Scan (npm audit)'
         run: |
-          yarn audit --json > ../security-report.json || true
+          npm audit --json > ../security-report.json || true
         continue-on-error: true
 
       - name: 'Upload Security Report'
@@ -69,20 +69,6 @@ jobs:
         with:
           name: security-report
           path: security-report.json
-
-      # --- OPTIONAL: PYTHON BACKEND LINT ---
-      # Uncomment this block if you have Python backend scripts
-      # - name: 'Run Python Lint (pylint)'
-      #   run: |
-      #     pip install pylint
-      #     pylint backend/**/*.py > ../pylint-report.txt || true
-      #   continue-on-error: true
-      #
-      # - name: 'Upload Python Lint Report'
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: pylint-report
-      #     path: pylint-report.txt
 
   # ======================================
   # JOB 2: PACKAGE DEPLOYMENT ARTIFACT
@@ -119,8 +105,8 @@ jobs:
       - name: 'Create Deployment Package'
         run: |
           mkdir -p deployment-package/src
-          cp -r react_ak/src/* deployment-package/src/
-          cp react_ak/package.json react_ak/yarn.lock deployment-package/
+          cp -r react_ak/frontend/src/* deployment-package/src/      # ✅ FIXED PATH
+          cp react_ak/frontend/package.json react_ak/frontend/package-lock.json deployment-package/
           cp README.md deployment-package/
           cp -r reports deployment-package/
           zip -r deployment-package.zip deployment-package
