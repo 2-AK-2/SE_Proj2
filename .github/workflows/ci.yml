@@ -12,7 +12,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: ./react_ak/frontend   # ✅ FIXED PATH
+        working-directory: ./react_ak/frontend   # Path to frontend
 
     steps:
       # --- CHECKOUT REPO ---
@@ -24,12 +24,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'     # ✅ Using npm, not yarn
-          cache-dependency-path: react_ak/frontend/package-lock.json   # ✅ FIXED PATH
+          cache: 'npm'
+          cache-dependency-path: react_ak/frontend/package-lock.json
 
       # --- INSTALL DEPENDENCIES ---
       - name: 'Install Dependencies'
-        run: npm ci        # ✅ Reliable install
+        run: npm ci
 
       # --- BUILD PROJECT ---
       - name: 'Run Build Script'
@@ -44,7 +44,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: react_ak/frontend/coverage/     # ✅ FIXED PATH
+          path: react_ak/frontend/coverage/   # Path where coverage is created
 
       # --- LINT (FRONTEND: ESLINT) ---
       - name: 'Run Lint Check (ESLint)'
@@ -56,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lint-report
-          path: lint-report.txt
+          path: react_ak/lint-report.txt       # ✅ PATCHED PATH
 
       # --- SECURITY SCAN ---
       - name: 'Run Security Scan (npm audit)'
@@ -68,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: security-report
-          path: security-report.json
+          path: react_ak/security-report.json  # ✅ PATCHED PATH
 
   # ======================================
   # JOB 2: PACKAGE DEPLOYMENT ARTIFACT
@@ -105,7 +105,7 @@ jobs:
       - name: 'Create Deployment Package'
         run: |
           mkdir -p deployment-package/src
-          cp -r react_ak/frontend/src/* deployment-package/src/      # ✅ FIXED PATH
+          cp -r react_ak/frontend/src/* deployment-package/src/
           cp react_ak/frontend/package.json react_ak/frontend/package-lock.json deployment-package/
           cp README.md deployment-package/
           cp -r reports deployment-package/
