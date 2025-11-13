@@ -2,6 +2,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import riderModel from "../models/riderModel.js";
+import db from "../config/db.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -9,14 +10,16 @@ dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || "cabify_dev_secret";
 const TOKEN_EXPIRES_IN = process.env.TOKEN_EXPIRES_IN || "2h";
 
-// 🧾 Register a new rider
+/* ============================================================
+   1️⃣ LEGACY EMAIL + PASSWORD REGISTRATION (OPTIONAL)
+   (Used ONLY if you still expose /riders/register)
+=============================================================== */
 export const registerRider = async (req, res) => {
   try {
     const { name, email, password } = req.body;
     if (!name || !email || !password)
       return res.status(400).json({ message: "All fields are required" });
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email))
       return res.status(400).json({ message: "Invalid email format" });
@@ -28,6 +31,7 @@ export const registerRider = async (req, res) => {
       return res.status(409).json({ message: "Email already registered" });
 
     const hashed = await bcrypt.hash(password, 10);
+
     const newRider = await riderModel.create({
       name,
       email: normalizedEmail,
@@ -44,7 +48,9 @@ export const registerRider = async (req, res) => {
   }
 };
 
-// 🔐 Rider login
+/* ============================================================
+   2️⃣ LOGIN (Email + Password)
+=============================================================== */
 export const loginRider = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -78,7 +84,9 @@ export const loginRider = async (req, res) => {
   }
 };
 
-// 👤 Get rider profile (protected route)
+/* ============================================================
+   3️⃣ GET PROFILE (JWT Protected)
+=============================================================== */
 export const getProfile = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -98,6 +106,48 @@ export const getProfile = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Profile fetch error:", err.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/* ============================================================
+   4️⃣ COMPLETE REGISTRATION (AFTER OTP)
+   Phone → Verified via OTP
+   Email + Password → Stored here
+=============================================================== */
+export const completeRiderRegistration = async (req, res) => {
+  try {
+    const { phone, email, password } = req.body;
+
+    if (!phone || !email || !password)
+      return res.status(400).json({ message: "All fields required" });
+
+    // Step 1: confirm OTP created rider with phone
+    const [phoneCheck] = await db.execute(
+      "SELECT id FROM riders WHERE phone = ?",
+      [phone]
+    );
+
+    if (phoneCheck.length === 0)
+      return res.status(400).json({ message: "Phone not verified" });
+
+    // Step 2: ensure email not in use
+    const existing = await riderModel.findByEmail(email);
+    if (existing)
+      return res.status(409).json({ message: "Email already registered" });
+
+    // Step 3: hash password
+    const hashed = await bcrypt.hash(password, 10);
+
+    // Step 4: update rider row
+    await db.execute(
+      "UPDATE riders SET email=?, password=? WHERE phone=?",
+      [email, hashed, phone]
+    );
+
+    res.json({ message: "Registration completed successfully" });
+  } catch (err) {
+    console.error("❌ Complete registration error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };

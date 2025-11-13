@@ -113,4 +113,4 @@ const DriverRegister = () => {
   );
 };
 
-export default DriverRe
+export default DriverRegister;
