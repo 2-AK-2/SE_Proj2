@@ -3,9 +3,8 @@ import { riderAPI } from "../api/api";
 import { setToken, getToken } from "../utils/authHelper";
 import Loader from "../components/Loader";
 import { useNavigate } from "react-router-dom";
-import "../styles/login.css";
 
-const Login = () => {
+export default function Login() {
   const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,28 +19,32 @@ const Login = () => {
     e.preventDefault();
     setMessage("");
     setLoading(true);
+
     try {
       const data = await riderAPI.login({ email, password });
       setToken(data.token);
-      setMessage("✅ Login successful!");
-      setTimeout(() => nav("/dashboard"), 600);
+      setMessage("Login successful!");
+      setTimeout(() => nav("/dashboard"), 700);
     } catch (err) {
-      const msg = err.response?.data?.message || "Login failed";
-      setMessage(`❌ ${msg}`);
-    } finally {
-      setLoading(false);
+      setMessage(err.response?.data?.message || "Login failed");
     }
+    setLoading(false);
   };
 
   return (
-    <div className="login-page">
-      <form className="login-card" onSubmit={handleSubmit}>
-        <h2>Rider Login</h2>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-olaGray to-white">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white shadow-soft rounded-2xl p-8 w-full max-w-md border border-olaGray"
+      >
+        <h2 className="text-3xl font-bold text-olaBlack text-center mb-6">
+          Rider Login
+        </h2>
 
         <input
           type="email"
           placeholder="Email"
-          value={email}
+          className="w-full border border-gray-300 rounded-lg p-3 mb-4"
           onChange={(e) => setEmail(e.target.value)}
           required
         />
@@ -49,19 +52,25 @@ const Login = () => {
         <input
           type="password"
           placeholder="Password"
-          value={password}
+          className="w-full border border-gray-300 rounded-lg p-3 mb-4"
           onChange={(e) => setPassword(e.target.value)}
           required
         />
 
-        <button type="submit" disabled={loading}>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-olaYellow text-olaBlack font-semibold py-3 rounded-lg hover:bg-yellow-400"
+        >
           {loading ? <Loader /> : "Login"}
         </button>
 
-        <p className="message">{message}</p>
+        {message && (
+          <p className="text-center text-red-500 font-medium mt-4">
+            {message}
+          </p>
+        )}
       </form>
     </div>
   );
-};
-
-export default Login;
+}

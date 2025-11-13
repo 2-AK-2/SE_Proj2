@@ -1,50 +1,51 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { MapPin, Phone } from "lucide-react";
+import { driverAPI } from "../api/api";
+import { removeToken } from "../utils/authHelper";
+import { useNavigate } from "react-router-dom";
 
-const RideNotifications = ({ onNavigate }) => {
+const RideNotifications = () => {
+  const navigate = useNavigate();
   const [rides, setRides] = useState([]);
 
   useEffect(() => {
-    const fetchRides = async () => {
+    const loadRides = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/driver/rides", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setRides(res.data);
+        const data = await driverAPI.getNotifications();
+        setRides(data);
       } catch (err) {
         console.error("Failed to fetch rides", err);
       }
     };
-    fetchRides();
+    loadRides();
   }, []);
 
   const handleAccept = () => {
     alert("Ride Accepted!");
-    onNavigate("rate");
+    navigate("/driver/rate");
   };
 
-  const handleReject = () => {
-    alert("Ride Rejected!");
+  const handleReject = () => alert("Ride Rejected!");
+
+  const logout = () => {
+    removeToken();
+    navigate("/driver/login");
   };
 
   return (
     <div className="bg-white shadow-soft rounded-2xl p-8 w-full max-w-lg border border-olaGray">
-      <h2 className="text-3xl font-bold text-olaBlack mb-4 text-center">
-        Ride Requests
-      </h2>
+      <h2 className="text-3xl font-bold text-olaBlack mb-4 text-center">Ride Requests</h2>
+
       {rides.map((ride) => (
-        <div
-          key={ride.id}
-          className="border border-gray-200 p-4 rounded-xl mb-4 bg-gray-50"
-        >
-          <p className="font-semibold text-olaBlack mb-2 flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-olaYellow" /> Pickup: {ride.pickup}
+        <div key={ride.id} className="border p-4 rounded-xl bg-gray-50 mb-4">
+          <p className="font-semibold text-olaBlack flex items-center gap-2 mb-2">
+            <MapPin className="text-olaYellow" /> Pickup: {ride.pickup}
           </p>
-          <p className="font-semibold text-olaBlack mb-2 flex items-center gap-2">
-            <Phone className="w-5 h-5 text-olaYellow" /> Drop: {ride.drop}
+
+          <p className="font-semibold text-olaBlack flex items-center gap-2 mb-2">
+            <Phone className="text-olaYellow" /> Drop: {ride.drop}
           </p>
+
           <p className="text-gray-700 mb-3">
             Fare: <span className="font-semibold">₹{ride.fare}</span>
           </p>
@@ -65,8 +66,9 @@ const RideNotifications = ({ onNavigate }) => {
           </div>
         </div>
       ))}
+
       <button
-        onClick={() => onNavigate("login")}
+        onClick={logout}
         className="text-olaBlack font-semibold hover:underline block mx-auto mt-4"
       >
         Logout
