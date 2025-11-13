@@ -1,17 +1,42 @@
+/* -------------------------------------------
+   TAILWIND BASE + UTILITIES
+-------------------------------------------- */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* -------------------------------------------
+   GLOBAL BODY (Unified + Polished)
+-------------------------------------------- */
 @layer base {
   body {
     @apply flex items-center justify-center min-h-screen;
+
     font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
     color: #fff;
+
     margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+
+    /* Smooth font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
+/* -------------------------------------------
+   CODE FONT (kept from CRA, harmless)
+-------------------------------------------- */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+/* -------------------------------------------
+   SHARED APP CONTAINER
+-------------------------------------------- */
 .app-container {
   width: 100%;
   display: flex;
@@ -19,6 +44,9 @@
   align-items: center;
 }
 
+/* -------------------------------------------
+   FORM WRAPPER (Glass UI)
+-------------------------------------------- */
 .form-wrapper {
   background: rgba(255, 255, 255, 0.08);
   padding: 2.5rem 3rem;
@@ -29,6 +57,9 @@
   width: 90%;
 }
 
+/* -------------------------------------------
+   TITLES
+-------------------------------------------- */
 .brand-title {
   text-align: center;
   font-size: 2rem;
@@ -36,6 +67,9 @@
   color: #ffd700;
 }
 
+/* -------------------------------------------
+   FORM LABELS
+-------------------------------------------- */
 .input-label {
   display: block;
   font-size: 0.9rem;
@@ -43,6 +77,9 @@
   color: #ddd;
 }
 
+/* -------------------------------------------
+   INPUTS
+-------------------------------------------- */
 .input-field {
   width: 100%;
   padding: 0.8rem;
@@ -59,6 +96,9 @@
   color: #ccc;
 }
 
+/* -------------------------------------------
+   PRIMARY BUTTONS
+-------------------------------------------- */
 .primary-btn {
   width: 100%;
   padding: 0.9rem;
@@ -76,10 +116,14 @@
   background: #f0c500;
 }
 
+/* Smooth fade for all buttons */
 button {
   @apply transition-all duration-200 ease-in-out;
 }
 
+/* -------------------------------------------
+   MESSAGES
+-------------------------------------------- */
 .message {
   text-align: center;
   font-size: 0.9rem;
@@ -87,13 +131,18 @@ button {
   color: #fff;
 }
 
+/* -------------------------------------------
+   CUSTOM SCROLLBAR
+-------------------------------------------- */
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.3);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.6);
 }

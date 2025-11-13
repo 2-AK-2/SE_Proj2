@@ -1,72 +1,85 @@
 import React, { useState } from "react";
+import { authAPI } from "../api/api";
+import Loader from "./Loader";
 
 function RiderSignup() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Generate a 6-digit OTP locally
-  const sendOtp = () => {
+  const sendOtp = async () => {
     if (!phone.match(/^\d{10}$/)) {
       setMessage("Please enter a valid 10-digit phone number.");
       return;
     }
-
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit random OTP
-    setGeneratedOtp(newOtp);
-    setOtpSent(true);
-    setMessage(`Demo OTP (for testing): ${newOtp}`);
+    setLoading(true);
+    try {
+      const res = await authAPI.sendOtp(phone);
+      setOtpSent(true);
+      setMessage(res.message || "OTP sent successfully!");
+    } catch {
+      setMessage("❌ Failed to send OTP. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const verifyOtp = () => {
+  const verifyOtp = async () => {
     if (!otp) {
       setMessage("Please enter the OTP.");
       return;
     }
-
-    if (otp === generatedOtp) {
-      setMessage("✅ Registration successful!");
-    } else {
-      setMessage("❌ Invalid OTP. Please try again.");
+    setLoading(true);
+    try {
+      const res = await authAPI.verifyOtp(phone, otp);
+      setMessage(res.message || "✅ Verification successful!");
+    } catch {
+      setMessage("❌ Invalid or expired OTP.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="signup-card">
-      <label className="input-label">Phone Number</label>
-      <input
-        type="text"
-        placeholder="Enter your phone number"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        className="input-field"
-      />
+    <div className="app-container">
+      <div className="form-wrapper">
+        <h1 className="brand-title">🚖 Cabify Rider Signup</h1>
 
-      {!otpSent && (
-        <button onClick={sendOtp} className="primary-btn">
-          Send OTP
-        </button>
-      )}
+        <label className="input-label">Phone Number</label>
+        <input
+          type="text"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Enter 10-digit phone number"
+          className="input-field"
+        />
 
-      {otpSent && (
-        <>
-          <label className="input-label">Enter OTP</label>
-          <input
-            type="text"
-            placeholder="Enter 6-digit OTP"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            className="input-field"
-          />
-          <button onClick={verifyOtp} className="primary-btn">
-            Verify OTP
+        {!otpSent && (
+          <button onClick={sendOtp} className="primary-btn">
+            {loading ? <Loader /> : "Send OTP"}
           </button>
-        </>
-      )}
+        )}
 
-      {message && <p className="message">{message}</p>}
+        {otpSent && (
+          <>
+            <label className="input-label">Enter OTP</label>
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="Enter 6-digit OTP"
+              className="input-field"
+            />
+            <button onClick={verifyOtp} className="primary-btn">
+              {loading ? <Loader /> : "Verify OTP"}
+            </button>
+          </>
+        )}
+
+        {message && <p className="message">{message}</p>}
+      </div>
     </div>
   );
 }

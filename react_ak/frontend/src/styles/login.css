@@ -1,0 +1,74 @@
+/* basic login styling */
+:root {
+  --card-bg: #ffffff;
+  --page-bg: #f2f6fb;
+  --primary: #007bff;
+}
+
+* { box-sizing: border-box; }
+
+body, html, #root {
+  height: 100%;
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--page-bg);
+}
+
+.login-page {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  width: 360px;
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(12, 24, 48, 0.08);
+  background: var(--card-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-card h2 {
+  margin: 0 0 6px 0;
+  text-align: center;
+}
+
+.login-card input {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  outline: none;
+  font-size: 14px;
+}
+
+.login-card input:focus {
+  box-shadow: 0 0 0 3px rgba(0,123,255,0.08);
+  border-color: var(--primary);
+}
+
+.login-card button {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+}
+
+.login-card .message {
+  color: #e03e2d;
+  font-size: 14px;
+  min-height: 20px;
+  text-align: center;
+}
+
+/* loader spin animation used by Loader component */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

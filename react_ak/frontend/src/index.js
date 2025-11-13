@@ -1,12 +1,20 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
-import "./index.css"; // make sure Tailwind styles apply
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import App from "./App";
+import "./index.css";
+import reportWebVitals from "./reportWebVitals";
 
-// Create a root container and render the App
-const root = ReactDOM.createRoot(document.getElementById("root"));
+// Create React root
+const root = createRoot(document.getElementById("root"));
+
 root.render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
+
+// Optional performance reporting
+reportWebVitals();
