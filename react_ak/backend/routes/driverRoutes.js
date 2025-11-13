@@ -7,6 +7,8 @@ import {
   rateRider,
 } from "../controllers/driverController.js";
 
+import { verifyToken } from "../middleware/auth.js";
+
 const router = express.Router();
 
 // File storage
@@ -22,10 +24,9 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + "-" + file.originalname);
   },
 });
-
 const upload = multer({ storage });
 
-// Routes
+// Driver registration
 router.post(
   "/register",
   upload.fields([
@@ -34,8 +35,11 @@ router.post(
   ]),
   registerDriver
 );
+
 router.post("/login", loginDriver);
-router.get("/rides", getRideRequests);
-router.post("/rate", rateRider);
+
+// Protected driver operations
+router.get("/rides", verifyToken, getRideRequests);
+router.post("/rate", verifyToken, rateRider);
 
 export default router;

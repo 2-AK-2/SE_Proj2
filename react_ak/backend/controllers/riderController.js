@@ -1,3 +1,4 @@
+// controllers/riderController.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import riderModel from "../models/riderModel.js";
