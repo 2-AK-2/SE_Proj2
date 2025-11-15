@@ -1,11 +1,15 @@
+// src/pages/FareEstimator.js
 import React, { useState } from "react";
 import { fareAPI } from "../api/api";
+import { useNavigate } from "react-router-dom";
 
 export default function FareEstimator() {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [estimate, setEstimate] = useState(null);
   const [error, setError] = useState("");
+
+  const nav = useNavigate();
 
   const handleEstimate = async () => {
     if (!pickup || !destination) {
@@ -19,6 +23,17 @@ export default function FareEstimator() {
     } catch {
       setError("Error fetching estimate");
     }
+  };
+
+  const goToBookingConfirm = () => {
+    nav("/booking/confirm", {
+      state: {
+        pickup,
+        destination,
+        fare: estimate.fare,
+        eta: estimate.eta,
+      },
+    });
   };
 
   return (
@@ -62,6 +77,13 @@ export default function FareEstimator() {
           <h4 className="text-lg font-semibold text-olaBlack">
             ETA: {estimate.eta} mins
           </h4>
+
+          <button
+            onClick={goToBookingConfirm}
+            className="w-full mt-4 bg-olaYellow text-olaBlack font-semibold py-3 rounded-lg hover:bg-yellow-400 transition"
+          >
+            Book Ride
+          </button>
         </div>
       )}
     </div>

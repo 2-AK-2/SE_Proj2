@@ -7,6 +7,7 @@ import driverRoutes from "./routes/driverRoutes.js";
 import riderRoutes from "./routes/riderRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import fareRoutes from "./routes/fareRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -23,6 +24,7 @@ app.use("/api/auth", authRoutes);        // OTP only
 app.use("/api/riders", riderRoutes);     // Login + Register + Profile
 app.use("/api/driver", driverRoutes);    // Driver login + register + rating
 app.use("/api/fare", fareRoutes);        // Fare estimator
+app.use("/api/bookings", bookingRoutes);
 
 // Health check
 app.get("/", (req, res) => {

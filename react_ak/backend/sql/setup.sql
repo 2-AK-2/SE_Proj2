@@ -7,6 +7,7 @@
 -- - Driver Login
 -- - Driver → Rider Rating
 -- - Fare Estimation History
+-- - Ride Booking + Driver Matching
 -- =============================================
 
 -- 1️⃣ Create & Select Database
@@ -26,7 +27,7 @@ CREATE TABLE riders (
   name VARCHAR(100),
   email VARCHAR(100) UNIQUE,
   password VARCHAR(255),
-  phone VARCHAR(15) UNIQUE,     -- nullable for email-based signup
+  phone VARCHAR(15) UNIQUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -66,7 +67,7 @@ CREATE TABLE drivers (
   name VARCHAR(100) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
-  license_doc VARCHAR(255) NOT NULL,     -- filesystem path
+  license_doc VARCHAR(255) NOT NULL,
   vehicle_doc VARCHAR(255) NOT NULL,
   verified TINYINT(1) DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -74,7 +75,6 @@ CREATE TABLE drivers (
 
 -- =============================================
 -- 5️⃣ Driver → Rider Rating Table
--- (used when driver submits a rating for a rider)
 -- =============================================
 DROP TABLE IF EXISTS driver_ratings;
 
@@ -104,5 +104,26 @@ CREATE TABLE ride_estimates (
 );
 
 -- =============================================
--- 🎉 DONE: This schema now matches 100% of your backend code
+-- 7️⃣ Rides Table (Booking + Driver Matching)
+-- =============================================
+DROP TABLE IF EXISTS rides;
+
+CREATE TABLE rides (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  rider_id INT NOT NULL,
+  driver_id INT DEFAULT NULL,
+  pickup VARCHAR(255),
+  drop_location VARCHAR(255),
+  fare FLOAT,
+  eta INT,
+  status ENUM('pending', 'assigned', 'accepted', 'rejected', 'completed')
+         DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (rider_id) REFERENCES riders(id) ON DELETE CASCADE,
+  FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE SET NULL
+);
+
+-- =============================================
+-- 🎉 DONE: DB schema now supports Sprint 2 (Ride Booking)
 -- =============================================

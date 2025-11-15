@@ -50,9 +50,9 @@ export default function RiderSignup() {
 
     setLoading(true);
     try {
-      const res = await authAPI.verifyOtp(phone, otp);
+      await authAPI.verifyOtp(phone, otp);
       setMessage("OTP verified!");
-      setStep(3); // move to email + password
+      setStep(3);
     } catch {
       setMessage("❌ Invalid or expired OTP.");
     } finally {
@@ -71,7 +71,7 @@ export default function RiderSignup() {
 
     setLoading(true);
     try {
-      const res = await riderAPI.completeRegistration({
+      await riderAPI.completeRegistration({
         phone,
         email,
         password,
@@ -89,7 +89,7 @@ export default function RiderSignup() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-olaGray to-white p-4">
       <div className="bg-white shadow-soft rounded-2xl p-8 w-full max-w-md border border-olaGray">
-        
+
         <h1 className="text-3xl font-bold text-olaBlack text-center mb-6">
           🚖 Cabify Rider Signup
         </h1>
@@ -136,7 +136,7 @@ export default function RiderSignup() {
           </>
         )}
 
-        {/* STEP 3 — EMAIL + PASSWORD */}
+        {/* STEP 3 — Email + Password */}
         {step === 3 && (
           <>
             <label className="block text-gray-700 mb-1">Email</label>
@@ -167,7 +167,9 @@ export default function RiderSignup() {
         )}
 
         {message && (
-          <p className="text-center text-olaBlack font-medium mt-4">{message}</p>
+          <p className="text-center text-olaBlack font-medium mt-4">
+            {message}
+          </p>
         )}
       </div>
     </div>

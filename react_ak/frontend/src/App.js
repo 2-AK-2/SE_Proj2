@@ -1,5 +1,5 @@
 // -----------------------------------------------------
-// src/App.js — COMPLETE, FIXED, WITH ROLE SCREENS
+// src/App.js — FINAL WORKING VERSION WITH BOOKING FLOW
 // -----------------------------------------------------
 
 import React from "react";
@@ -7,9 +7,12 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 // Components & Pages
 import Navbar from "./components/Navbar";
+
 import RiderSignup from "./components/RiderSignup";
 import Login from "./pages/Login";
 import FareEstimator from "./pages/FareEstimator";
+
+import BookingConfirm from "./pages/BookingConfirm";
 
 import DriverLogin from "./components/DriverLogin";
 import DriverRegister from "./components/DriverRegister";
@@ -29,7 +32,7 @@ function ProtectedRoute({ children }) {
 
 
 // -----------------------------------------------------
-// 🎨 ROLE SELECTION SCREEN (Landing Page)
+// 🎨 ROLE SELECTION SCREEN
 // -----------------------------------------------------
 function RoleSelect() {
   const navigate = useNavigate();
@@ -59,7 +62,7 @@ function RoleSelect() {
 
 
 // -----------------------------------------------------
-// 🧍 Rider Choice Screen
+// 🧍 Rider Choice
 // -----------------------------------------------------
 function ChooseRider() {
   const navigate = useNavigate();
@@ -87,7 +90,7 @@ function ChooseRider() {
 
 
 // -----------------------------------------------------
-// 🚗 Driver Choice Screen
+// 🚗 Driver Choice
 // -----------------------------------------------------
 function ChooseDriver() {
   const navigate = useNavigate();
@@ -115,7 +118,7 @@ function ChooseDriver() {
 
 
 // -----------------------------------------------------
-// 🚀 MAIN APP COMPONENT
+// 🚀 MAIN APP
 // -----------------------------------------------------
 export default function App() {
   return (
@@ -125,15 +128,16 @@ export default function App() {
       <div className="flex items-center justify-center p-4">
         <Routes>
 
-          {/* Landing */}
+          {/* Landing + Choices */}
           <Route path="/" element={<RoleSelect />} />
           <Route path="/choose-rider" element={<ChooseRider />} />
           <Route path="/choose-driver" element={<ChooseDriver />} />
 
-          {/* Rider */}
+          {/* Rider Auth */}
           <Route path="/signup" element={<RiderSignup />} />
           <Route path="/login" element={<Login />} />
 
+          {/* Rider Dashboard = Fare Estimator */}
           <Route
             path="/dashboard"
             element={
@@ -143,7 +147,19 @@ export default function App() {
             }
           />
 
-          {/* Driver */}
+          {/* BOOKING FLOW */}
+          <Route
+            path="/booking/confirm"
+            element={
+              <ProtectedRoute>
+                <BookingConfirm />
+              </ProtectedRoute>
+            }
+          />
+
+  
+
+          {/* Driver (Ignore if not needed for rider flow) */}
           <Route path="/driver/login" element={<DriverLogin />} />
           <Route path="/driver/register" element={<DriverRegister />} />
 
