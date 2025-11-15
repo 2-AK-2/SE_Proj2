@@ -41,7 +41,6 @@ export const authAPI = {
 // 👤 RIDER AUTH — Email + Password
 // ======================================================
 export const riderAPI = {
-  // Step 2 of OTP signup
   completeRegistration: async (data) =>
     (await instance.post("/riders/complete-registration", data)).data,
 
@@ -56,7 +55,7 @@ export const riderAPI = {
 };
 
 // ======================================================
-// 🚗 DRIVER API
+// 🚗 DRIVER API (you are not using this now but it's fine)
 // ======================================================
 export const driverAPI = {
   register: async (formData) =>
@@ -87,6 +86,17 @@ export const fareAPI = {
         destination,
       })
     ).data,
+};
+
+// ======================================================
+// 🚕 BOOKING API (NEW — MUST HAVE)
+// ======================================================
+export const bookingAPI = {
+  create: async (data) =>
+    (await instance.post("/bookings/create", data)).data,
+
+  getBooking: async (id) =>
+    (await instance.get(`/bookings/${id}`)).data,
 };
 
 export default instance;
