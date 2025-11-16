@@ -13,7 +13,37 @@ const bookingModel = {
     return { bookingId: result.insertId };
   },
 
-  // 2️⃣ Assign nearest driver
+  // 2️⃣ Assign nearest driver using Haversine formula
+  async findNearestDriver(pickupLat, pickupLng) {
+    const [rows] = await db.execute(
+      `
+      SELECT 
+        id,
+        name,
+        email,
+        latitude,
+        longitude,
+        (
+          6371 * ACOS(
+            COS(RADIANS(?)) *
+            COS(RADIANS(latitude)) *
+            COS(RADIANS(longitude) - RADIANS(?)) +
+            SIN(RADIANS(?)) *
+            SIN(RADIANS(latitude))
+          )
+        ) AS distance
+      FROM drivers
+      WHERE verified = 1
+      ORDER BY distance ASC
+      LIMIT 1;
+      `,
+      [pickupLat, pickupLng, pickupLat]
+    );
+
+    return rows[0] || null;
+  },
+
+  // 3️⃣ Assign that driver to booking
   async assignDriver(bookingId, driverId) {
     await db.execute(
       `UPDATE rides SET driver_id = ?, status = 'assigned'
@@ -22,7 +52,7 @@ const bookingModel = {
     );
   },
 
-  // 3️⃣ Update booking status
+  // 4️⃣ Update booking status
   async updateStatus(bookingId, status) {
     await db.execute(
       `UPDATE rides SET status = ? WHERE id = ?`,
@@ -30,23 +60,13 @@ const bookingModel = {
     );
   },
 
-  // 4️⃣ Get booking by ID
+  // 5️⃣ Get booking by ID
   async getBookingById(bookingId) {
     const [rows] = await db.execute(
       `SELECT * FROM rides WHERE id = ?`,
       [bookingId]
     );
     return rows[0] || null;
-  },
-
-  // 5️⃣ Find available drivers (for matching)
-  async getAvailableDrivers() {
-    const [drivers] = await db.execute(
-      `SELECT id, name, email
-       FROM drivers
-       WHERE verified = 1`
-    );
-    return drivers;
   },
 
   // 6️⃣ Get all bookings for a rider

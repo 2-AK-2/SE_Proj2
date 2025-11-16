@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import FareEstimator from "./pages/FareEstimator";
 
 import BookingConfirm from "./pages/BookingConfirm";
+import BookingDetails from "./pages/BookingDetails";   // ⭐ NEW PAGE
 
 import DriverLogin from "./components/DriverLogin";
 import DriverRegister from "./components/DriverRegister";
@@ -157,9 +158,17 @@ export default function App() {
             }
           />
 
-  
+          {/* ⭐ NEW — Booking Details Page */}
+          <Route
+            path="/booking/:id"
+            element={
+              <ProtectedRoute>
+                <BookingDetails />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Driver (Ignore if not needed for rider flow) */}
+          {/* Driver (Ignore for rider-only development) */}
           <Route path="/driver/login" element={<DriverLogin />} />
           <Route path="/driver/register" element={<DriverRegister />} />
 
