@@ -2,33 +2,32 @@
 import axios from "axios";
 import { getToken } from "../utils/authHelper";
 
-// ================================
+// ==========================================
 // 🌐 BASE URL
-// ================================
-const baseURL =
-  process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+// ==========================================
+const baseURL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
-// Create Axios instance
+// Axios instance
 const instance = axios.create({
   baseURL,
   headers: { "Content-Type": "application/json" },
 });
 
-// ================================
-// 🔐 Attach JWT Token Automatically
-// ================================
+// ==========================================
+// 🔐 Automatically attach JWT token
+// ==========================================
 instance.interceptors.request.use(
   (config) => {
     const token = getToken();
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error) => Promise.reject(error)
+  (err) => Promise.reject(err)
 );
 
-// ======================================================
-// 📱 OTP AUTH — Phone-based
-// ======================================================
+// ==========================================
+// 📱 OTP AUTH (Phone)
+// ==========================================
 export const authAPI = {
   sendOtp: async (phone) =>
     (await instance.post("/auth/send-otp", { phone })).data,
@@ -37,9 +36,9 @@ export const authAPI = {
     (await instance.post("/auth/verify-otp", { phone, otp })).data,
 };
 
-// ======================================================
-// 👤 RIDER AUTH — Email + Password
-// ======================================================
+// ==========================================
+// 👤 RIDER AUTH (Email/Password)
+// ==========================================
 export const riderAPI = {
   completeRegistration: async (data) =>
     (await instance.post("/riders/complete-registration", data)).data,
@@ -54,30 +53,34 @@ export const riderAPI = {
     (await instance.get("/riders/profile")).data,
 };
 
-// ======================================================
-// 🚗 DRIVER API (not required now but kept)
-// ======================================================
+// ==========================================
+// 🚗 DRIVER API
+// ==========================================
 export const driverAPI = {
-  register: async (formData) =>
-    (
-      await instance.post("/driver/register", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-    ).data,
+  register: async (data) =>
+    (await instance.post("/driver/register", data)).data,
 
-  login: async (credentials) =>
-    (await instance.post("/driver/login", credentials)).data,
+  login: async (data) =>
+    (await instance.post("/driver/login", data)).data,
 
+  // 🔥 Correct backend route for driver ride requests:
+  // GET /api/driver/rides
   getNotifications: async () =>
     (await instance.get("/driver/rides")).data,
 
-  rateRider: async (data) =>
-    (await instance.post("/driver/rate", data)).data,
+  getProfile: async () =>
+    (await instance.get("/driver/profile")).data,
+
+  updateProfile: async (data) =>
+    (await instance.post("/driver/profile/update", data)).data,
+
+  changePassword: async (data) =>
+    (await instance.post("/driver/profile/change-password", data)).data,
 };
 
-// ======================================================
+// ==========================================
 // 🚕 Fare Estimator
-// ======================================================
+// ==========================================
 export const fareAPI = {
   estimate: async (pickup, destination) =>
     (
@@ -88,25 +91,27 @@ export const fareAPI = {
     ).data,
 };
 
-// ======================================================
-// 🚕 BOOKING API
-// ======================================================
+// ==========================================
+// 🚕 Booking API
+// ==========================================
 export const bookingAPI = {
   create: async (data) =>
     (await instance.post("/bookings/create", data)).data,
 
   getBooking: async (id) =>
     (await instance.get(`/bookings/${id}`)).data,
+
+  updateStatus: async (id, status) =>
+    (await instance.post(`/bookings/${id}/update-status`, { status })).data,
 };
 
-// ======================================================
-// 🌍 DRIVER LIVE LOCATION API (⭐ FIXED ENDPOINT)
-// ======================================================
+// ==========================================
+// 📍 Driver Live Location API
+// (Your backend has GET /api/location/:id)
+// ==========================================
 export const locationAPI = {
-  // Backend route = GET /api/location/:id
   getLocation: async (driverId) =>
     (await instance.get(`/location/${driverId}`)).data,
 };
 
-// Export Axios instance
 export default instance;

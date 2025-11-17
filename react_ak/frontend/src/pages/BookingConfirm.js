@@ -41,7 +41,7 @@ export default function BookingConfirm() {
         pickup_lng: coords.lng,
       });
 
-      nav(`/booking/${res.bookingId}`);
+      nav(`/rider/wait/${res.bookingId}`);
     } catch (err) {
       console.error(err);
       alert("Failed to create booking");

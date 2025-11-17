@@ -1,39 +1,39 @@
-// -----------------------------------------------------
-// src/App.js — FINAL WORKING VERSION WITH BOOKING FLOW
-// -----------------------------------------------------
+// src/App.js — CLEAN FINAL VERSION
 
 import React from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
-// Components & Pages
+// Components
 import Navbar from "./components/Navbar";
 
+// Rider Pages
 import RiderSignup from "./components/RiderSignup";
 import Login from "./pages/Login";
 import FareEstimator from "./pages/FareEstimator";
-
 import BookingConfirm from "./pages/BookingConfirm";
-import BookingDetails from "./pages/BookingDetails";   // ⭐ NEW PAGE
+import RiderWait from "./pages/RiderWait";
 
+// Driver Pages
 import DriverLogin from "./components/DriverLogin";
 import DriverRegister from "./components/DriverRegister";
 import RideNotifications from "./components/RideNotifications";
-import RateRider from "./components/RateRider";
+import DriverProfile from "./components/DriverProfile";
+import EditDriverProfile from "./components/EditDriverProfile";
+import DriverChangePassword from "./components/DriverChangePassword";
 
+// Auth Helper
 import { getToken } from "./utils/authHelper";
 
-
 // -----------------------------------------------------
-// 🔐 Protected Route Wrapper
+// 🔐 PROTECTED ROUTE (works for both rider & driver)
 // -----------------------------------------------------
 function ProtectedRoute({ children }) {
   const token = getToken();
   return token ? children : <Navigate to="/login" replace />;
 }
 
-
 // -----------------------------------------------------
-// 🎨 ROLE SELECTION SCREEN
+// 🎨 ROLE SELECTOR
 // -----------------------------------------------------
 function RoleSelect() {
   const navigate = useNavigate();
@@ -61,9 +61,8 @@ function RoleSelect() {
   );
 }
 
-
 // -----------------------------------------------------
-// 🧍 Rider Choice
+// 🧍 RIDER CHOICE PAGE
 // -----------------------------------------------------
 function ChooseRider() {
   const navigate = useNavigate();
@@ -89,9 +88,8 @@ function ChooseRider() {
   );
 }
 
-
 // -----------------------------------------------------
-// 🚗 Driver Choice
+// 🚗 DRIVER CHOICE PAGE
 // -----------------------------------------------------
 function ChooseDriver() {
   const navigate = useNavigate();
@@ -117,9 +115,8 @@ function ChooseDriver() {
   );
 }
 
-
 // -----------------------------------------------------
-// 🚀 MAIN APP
+// 🚀 MAIN APP ROUTER
 // -----------------------------------------------------
 export default function App() {
   return (
@@ -128,8 +125,7 @@ export default function App() {
 
       <div className="flex items-center justify-center p-4">
         <Routes>
-
-          {/* Landing + Choices */}
+          {/* Landing */}
           <Route path="/" element={<RoleSelect />} />
           <Route path="/choose-rider" element={<ChooseRider />} />
           <Route path="/choose-driver" element={<ChooseDriver />} />
@@ -138,7 +134,7 @@ export default function App() {
           <Route path="/signup" element={<RiderSignup />} />
           <Route path="/login" element={<Login />} />
 
-          {/* Rider Dashboard = Fare Estimator */}
+          {/* Rider Dashboard */}
           <Route
             path="/dashboard"
             element={
@@ -148,7 +144,7 @@ export default function App() {
             }
           />
 
-          {/* BOOKING FLOW */}
+          {/* Booking Flow */}
           <Route
             path="/booking/confirm"
             element={
@@ -158,20 +154,20 @@ export default function App() {
             }
           />
 
-          {/* ⭐ NEW — Booking Details Page */}
           <Route
-            path="/booking/:id"
+            path="/rider/wait/:id"
             element={
               <ProtectedRoute>
-                <BookingDetails />
+                <RiderWait />
               </ProtectedRoute>
             }
           />
 
-          {/* Driver (Ignore for rider-only development) */}
+          {/* Driver Login & Register */}
           <Route path="/driver/login" element={<DriverLogin />} />
           <Route path="/driver/register" element={<DriverRegister />} />
 
+          {/* DRIVER AFTER LOGIN → Ride Requests */}
           <Route
             path="/driver/notifications"
             element={
@@ -181,15 +177,33 @@ export default function App() {
             }
           />
 
+          {/* Driver Profile */}
           <Route
-            path="/driver/rate"
+            path="/driver/profile"
             element={
               <ProtectedRoute>
-                <RateRider />
+                <DriverProfile />
               </ProtectedRoute>
             }
           />
 
+          <Route
+            path="/driver/profile/edit"
+            element={
+              <ProtectedRoute>
+                <EditDriverProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/driver/profile/change-password"
+            element={
+              <ProtectedRoute>
+                <DriverChangePassword />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
     </div>

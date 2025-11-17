@@ -1,45 +1,31 @@
 import express from "express";
-import multer from "multer";
 import {
   registerDriver,
   loginDriver,
-  getRideRequests,
-  rateRider,
+  getDriverProfile,
+  updateDriverProfile,
+  changeDriverPassword
 } from "../controllers/driverController.js";
-
 import { verifyToken } from "../middleware/auth.js";
+import { getRideRequests } from "../controllers/driverController.js";
 
 const router = express.Router();
 
-// File storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const folder =
-      file.fieldname === "license"
-        ? "uploads/licenses"
-        : "uploads/vehicles";
-    cb(null, folder);
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-const upload = multer({ storage });
+// Register
+router.post("/register", registerDriver);
 
-// Driver registration
-router.post(
-  "/register",
-  upload.fields([
-    { name: "license", maxCount: 1 },
-    { name: "vehicleDoc", maxCount: 1 },
-  ]),
-  registerDriver
-);
-
+// Login
 router.post("/login", loginDriver);
-
-// Protected driver operations
 router.get("/rides", verifyToken, getRideRequests);
-router.post("/rate", verifyToken, rateRider);
+
+
+// Profile
+router.get("/profile", verifyToken, getDriverProfile);
+
+// Update (name + phone)
+router.post("/profile/update", verifyToken, updateDriverProfile);
+
+// Change password
+router.post("/profile/change-password", verifyToken, changeDriverPassword);
 
 export default router;

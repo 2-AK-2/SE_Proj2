@@ -2,62 +2,43 @@
 import bookingModel from "../models/bookingModel.js";
 import db from "../config/db.js";
 
-// POST /api/bookings/create
+// -----------------------------------------------------------------------
+// 1️⃣ Rider creates a booking → status = 'pending'
+// -----------------------------------------------------------------------
 export const createBooking = async (req, res) => {
   try {
     const riderId = req.user?.id;
-    if (!riderId) return res.status(401).json({ message: "Unauthorized" });
+    if (!riderId)
+      return res.status(401).json({ message: "Unauthorized" });
 
-    const { pickup, drop_location, fare, eta, pickup_lat, pickup_lng } = req.body;
+    const { pickup, drop_location, fare, eta } = req.body;
 
     if (!pickup || !drop_location)
       return res.status(400).json({ message: "pickup and drop_location required" });
 
-    // 1️⃣ Create booking with pending status
+    // Create pending ride
     const { bookingId } = await bookingModel.createBooking({
       rider_id: riderId,
       pickup,
       drop_location,
-      fare: fare || 0,
-      eta: eta || 0,
+      fare,
+      eta,
     });
 
-    // 2️⃣ Validate coordinates
-    const lat = pickup_lat || 12.9716;
-    const lng = pickup_lng || 77.5946;
-
-    // 3️⃣ Find nearest driver using Haversine formula
-    const nearestDriver = await bookingModel.findNearestDriver(lat, lng);
-
-    // No drivers → return booking but pending
-    if (!nearestDriver) {
-      return res.status(200).json({
-        message: "Booking created but no drivers available",
-        bookingId,
-      });
-    }
-
-    // 4️⃣ Assign driver
-    await bookingModel.assignDriver(bookingId, nearestDriver.id);
-
-    res.status(200).json({
-      message: "Driver assigned successfully",
+    return res.json({
+      message: "Booking created. Waiting for driver acceptance.",
       bookingId,
-      driver: {
-        id: nearestDriver.id,
-        name: nearestDriver.name,
-        email: nearestDriver.email,
-        latitude: nearestDriver.latitude,
-        longitude: nearestDriver.longitude,
-      },
     });
+
   } catch (err) {
     console.error("❌ createBooking error:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// GET /api/bookings/:id
+// -----------------------------------------------------------------------
+// 2️⃣ Rider fetches booking status
+// -----------------------------------------------------------------------
 export const getBooking = async (req, res) => {
   try {
     const bookingId = Number(req.params.id);
@@ -65,39 +46,46 @@ export const getBooking = async (req, res) => {
       return res.status(400).json({ message: "Invalid booking id" });
 
     const booking = await bookingModel.getBookingById(bookingId);
+
     if (!booking)
       return res.status(404).json({ message: "Booking not found" });
 
-    res.json(booking);
+    return res.json(booking);
+
   } catch (err) {
     console.error("❌ getBooking error:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// Driver assigned bookings
+// -----------------------------------------------------------------------
+// 3️⃣ Driver sees pending ride requests (driver_id NULL)
+// -----------------------------------------------------------------------
 export const getDriverBookings = async (req, res) => {
   try {
     const driverId = req.user?.id;
-    if (!driverId) return res.status(401).json({ message: "Unauthorized" });
+    if (!driverId)
+      return res.status(401).json({ message: "Unauthorized" });
 
     const [rows] = await db.execute(
-      `SELECT r.id, r.rider_id, r.pickup, r.drop_location, r.fare, r.eta, r.status, r.created_at,
-              ri.name AS rider_name, ri.phone AS rider_phone
-       FROM rides r
-       LEFT JOIN riders ri ON ri.id = r.rider_id
-       WHERE r.driver_id = ? AND r.status IN ('assigned', 'pending')`,
-      [driverId]
+      `SELECT id, pickup, drop_location, fare, status
+       FROM rides
+       WHERE driver_id IS NULL
+       AND status = 'pending'
+       ORDER BY id DESC`
     );
 
-    res.json(rows);
+    return res.json(rows);
+
   } catch (err) {
     console.error("❌ getDriverBookings error:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// Update booking status
+// -----------------------------------------------------------------------
+// 4️⃣ Driver updates booking status → accepted / rejected / completed
+// -----------------------------------------------------------------------
 export const updateBookingStatus = async (req, res) => {
   try {
     const driverId = req.user?.id;
@@ -107,21 +95,21 @@ export const updateBookingStatus = async (req, res) => {
     if (!bookingId || !status)
       return res.status(400).json({ message: "bookingId and status required" });
 
-    const allowed = ["accepted", "rejected", "completed", "ongoing"];
+    const allowed = ["accepted", "rejected", "completed"];
     if (!allowed.includes(status))
       return res.status(400).json({ message: "Invalid status" });
 
-    if (["accepted", "rejected"].includes(status)) {
-      const booking = await bookingModel.getBookingById(bookingId);
-      if (!booking) return res.status(404).json({ message: "Booking not found" });
-      if (booking.driver_id !== driverId)
-        return res.status(403).json({ message: "Only assigned driver can update status" });
+    // Accept ride = assign driver
+    if (status === "accepted") {
+      await bookingModel.assignDriver(bookingId, driverId);
+    } else {
+      await bookingModel.updateStatus(bookingId, status);
     }
 
-    await bookingModel.updateStatus(bookingId, status);
-    res.json({ message: `Booking ${status}` });
+    return res.json({ message: `Booking ${status}` });
+
   } catch (err) {
     console.error("❌ updateBookingStatus error:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
