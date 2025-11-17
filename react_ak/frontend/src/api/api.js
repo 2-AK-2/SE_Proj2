@@ -55,25 +55,31 @@ export const riderAPI = {
 };
 
 // ======================================================
-// 🚗 DRIVER API (you are not using this now but it's fine)
+// 🚗 DRIVER API — Login, Register, Profile, Password, Notifications
 // ======================================================
+// src/api/api.js
+
 export const driverAPI = {
-  register: async (formData) =>
-    (
-      await instance.post("/driver/register", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-    ).data,
+  register: async (data) =>
+    (await instance.post("/driver/register", data)).data,
 
-  login: async (credentials) =>
-    (await instance.post("/driver/login", credentials)).data,
+  login: async (data) =>
+    (await instance.post("/driver/login", data)).data,
 
+  // FIXED HERE
   getNotifications: async () =>
     (await instance.get("/driver/rides")).data,
 
-  rateRider: async (data) =>
-    (await instance.post("/driver/rate", data)).data,
+  getProfile: async () =>
+    (await instance.get("/driver/profile")).data,
+
+  updateProfile: async (data) =>
+    (await instance.post("/driver/profile/update", data)).data,
+
+  changePassword: async (data) =>
+    (await instance.post("/driver/profile/change-password", data)).data,
 };
+
 
 // ======================================================
 // 🚕 Fare Estimator
@@ -89,7 +95,7 @@ export const fareAPI = {
 };
 
 // ======================================================
-// 🚕 BOOKING API (NEW — MUST HAVE)
+// 🚕 BOOKING API
 // ======================================================
 export const bookingAPI = {
   create: async (data) =>
@@ -97,6 +103,9 @@ export const bookingAPI = {
 
   getBooking: async (id) =>
     (await instance.get(`/bookings/${id}`)).data,
+
+  updateStatus: async (id, status) =>
+    (await instance.post(`/bookings/${id}/update-status`, { status })).data,
 };
 
 export default instance;

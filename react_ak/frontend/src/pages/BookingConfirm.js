@@ -25,7 +25,7 @@ export default function BookingConfirm() {
         eta,
       });
 
-      nav(`/booking/${res.bookingId}`);
+      nav(`/rider/wait/${res.bookingId}`);
     } catch (err) {
       console.error(err);
       alert("Failed to create booking");

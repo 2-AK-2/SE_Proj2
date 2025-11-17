@@ -1,29 +1,34 @@
 // -----------------------------------------------------
-// src/App.js — FINAL WORKING VERSION WITH BOOKING FLOW
+// src/App.js — CLEAN + UPDATED WITH NEW DRIVER PROFILE SYSTEM
 // -----------------------------------------------------
 
 import React from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
-// Components & Pages
+// Components
 import Navbar from "./components/Navbar";
 
+// Rider Pages
 import RiderSignup from "./components/RiderSignup";
 import Login from "./pages/Login";
 import FareEstimator from "./pages/FareEstimator";
-
 import BookingConfirm from "./pages/BookingConfirm";
+import RiderWait from "./pages/RiderWait";
 
+// Driver Pages (updated)
 import DriverLogin from "./components/DriverLogin";
 import DriverRegister from "./components/DriverRegister";
 import RideNotifications from "./components/RideNotifications";
-import RateRider from "./components/RateRider";
+import DriverProfile from "./components/DriverProfile";
+import EditDriverProfile from "./components/EditDriverProfile";
+import DriverChangePassword from "./components/DriverChangePassword";
 
+// Auth
 import { getToken } from "./utils/authHelper";
 
 
 // -----------------------------------------------------
-// 🔐 Protected Route Wrapper
+// 🔐 PROTECTED ROUTE
 // -----------------------------------------------------
 function ProtectedRoute({ children }) {
   const token = getToken();
@@ -32,14 +37,16 @@ function ProtectedRoute({ children }) {
 
 
 // -----------------------------------------------------
-// 🎨 ROLE SELECTION SCREEN
+// 🎨 ROLE SELECTION PAGE
 // -----------------------------------------------------
 function RoleSelect() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-olaGray to-white p-6">
-      <h1 className="text-4xl font-bold text-olaBlack mb-10">🚖 Welcome to Cabify</h1>
+      <h1 className="text-4xl font-bold text-olaBlack mb-10">
+        🚖 Welcome to Cabify
+      </h1>
 
       <div className="flex gap-6">
         <button
@@ -62,7 +69,7 @@ function RoleSelect() {
 
 
 // -----------------------------------------------------
-// 🧍 Rider Choice
+// 🧍 RIDER CHOICE PAGE
 // -----------------------------------------------------
 function ChooseRider() {
   const navigate = useNavigate();
@@ -90,7 +97,7 @@ function ChooseRider() {
 
 
 // -----------------------------------------------------
-// 🚗 Driver Choice
+// 🚗 DRIVER CHOICE PAGE
 // -----------------------------------------------------
 function ChooseDriver() {
   const navigate = useNavigate();
@@ -118,7 +125,7 @@ function ChooseDriver() {
 
 
 // -----------------------------------------------------
-// 🚀 MAIN APP
+// 🚀 MAIN APP ROUTER
 // -----------------------------------------------------
 export default function App() {
   return (
@@ -128,7 +135,7 @@ export default function App() {
       <div className="flex items-center justify-center p-4">
         <Routes>
 
-          {/* Landing + Choices */}
+          {/* Landing */}
           <Route path="/" element={<RoleSelect />} />
           <Route path="/choose-rider" element={<ChooseRider />} />
           <Route path="/choose-driver" element={<ChooseDriver />} />
@@ -137,7 +144,7 @@ export default function App() {
           <Route path="/signup" element={<RiderSignup />} />
           <Route path="/login" element={<Login />} />
 
-          {/* Rider Dashboard = Fare Estimator */}
+          {/* Rider Dashboard */}
           <Route
             path="/dashboard"
             element={
@@ -147,7 +154,7 @@ export default function App() {
             }
           />
 
-          {/* BOOKING FLOW */}
+          {/* Rider Booking Flow */}
           <Route
             path="/booking/confirm"
             element={
@@ -157,26 +164,51 @@ export default function App() {
             }
           />
 
-  
+          <Route
+            path="/rider/wait/:id"
+            element={
+              <ProtectedRoute>
+                <RiderWait />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Driver (Ignore if not needed for rider flow) */}
+          {/* DRIVER AUTH */}
           <Route path="/driver/login" element={<DriverLogin />} />
           <Route path="/driver/register" element={<DriverRegister />} />
-
           <Route
             path="/driver/notifications"
             element={
               <ProtectedRoute>
-                <RideNotifications />
+                  <RideNotifications />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* DRIVER PROFILE */}
+          <Route
+            path="/driver/profile"
+            element={
+              <ProtectedRoute>
+                <DriverProfile />
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/driver/rate"
+            path="/driver/profile/edit"
             element={
               <ProtectedRoute>
-                <RateRider />
+                <EditDriverProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/driver/profile/change-password"
+            element={
+              <ProtectedRoute>
+                <DriverChangePassword />
               </ProtectedRoute>
             }
           />

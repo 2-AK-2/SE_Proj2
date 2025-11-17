@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { riderAPI } from "../api/api";
-import { setToken, getToken } from "../utils/authHelper";
+import { setRiderToken, getToken } from "../utils/authHelper";
 import Loader from "../components/Loader";
 import { useNavigate } from "react-router-dom";
 
@@ -22,7 +22,7 @@ export default function Login() {
 
     try {
       const data = await riderAPI.login({ email, password });
-      setToken(data.token);
+      setRiderToken(data.token);
       setMessage("Login successful!");
       setTimeout(() => nav("/dashboard"), 700);
     } catch (err) {

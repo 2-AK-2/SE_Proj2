@@ -1,4 +1,3 @@
-// routes/bookingRoutes.js
 import express from "express";
 import { verifyToken } from "../middleware/auth.js";
 import {
@@ -10,16 +9,16 @@ import {
 
 const router = express.Router();
 
-// Rider creates a booking (authenticated)
+// Rider creates a booking
 router.post("/create", verifyToken, createBooking);
 
-// Get booking details
+// DRIVER ROUTE MUST COME BEFORE /:id  ❗❗
+router.get("/driver", verifyToken, getDriverBookings);
+
+// Get booking details (rider)
 router.get("/:id", verifyToken, getBooking);
 
-// Driver polls for assigned bookings
-router.get("/driver/assigned", verifyToken, getDriverBookings);
-
-// Driver (or authorized user) updates status for booking id
+// Update booking status
 router.post("/:id/update-status", verifyToken, updateBookingStatus);
 
 export default router;
