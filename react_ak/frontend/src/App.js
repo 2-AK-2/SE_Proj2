@@ -1,6 +1,4 @@
-// -----------------------------------------------------
-// src/App.js — CLEAN + UPDATED WITH NEW DRIVER PROFILE SYSTEM
-// -----------------------------------------------------
+// src/App.js — CLEAN FINAL VERSION
 
 import React from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
@@ -15,7 +13,7 @@ import FareEstimator from "./pages/FareEstimator";
 import BookingConfirm from "./pages/BookingConfirm";
 import RiderWait from "./pages/RiderWait";
 
-// Driver Pages (updated)
+// Driver Pages
 import DriverLogin from "./components/DriverLogin";
 import DriverRegister from "./components/DriverRegister";
 import RideNotifications from "./components/RideNotifications";
@@ -23,30 +21,26 @@ import DriverProfile from "./components/DriverProfile";
 import EditDriverProfile from "./components/EditDriverProfile";
 import DriverChangePassword from "./components/DriverChangePassword";
 
-// Auth
+// Auth Helper
 import { getToken } from "./utils/authHelper";
 
-
 // -----------------------------------------------------
-// 🔐 PROTECTED ROUTE
+// 🔐 PROTECTED ROUTE (works for both rider & driver)
 // -----------------------------------------------------
 function ProtectedRoute({ children }) {
   const token = getToken();
   return token ? children : <Navigate to="/login" replace />;
 }
 
-
 // -----------------------------------------------------
-// 🎨 ROLE SELECTION PAGE
+// 🎨 ROLE SELECTOR
 // -----------------------------------------------------
 function RoleSelect() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-olaGray to-white p-6">
-      <h1 className="text-4xl font-bold text-olaBlack mb-10">
-        🚖 Welcome to Cabify
-      </h1>
+      <h1 className="text-4xl font-bold text-olaBlack mb-10">🚖 Welcome to Cabify</h1>
 
       <div className="flex gap-6">
         <button
@@ -66,7 +60,6 @@ function RoleSelect() {
     </div>
   );
 }
-
 
 // -----------------------------------------------------
 // 🧍 RIDER CHOICE PAGE
@@ -95,7 +88,6 @@ function ChooseRider() {
   );
 }
 
-
 // -----------------------------------------------------
 // 🚗 DRIVER CHOICE PAGE
 // -----------------------------------------------------
@@ -123,7 +115,6 @@ function ChooseDriver() {
   );
 }
 
-
 // -----------------------------------------------------
 // 🚀 MAIN APP ROUTER
 // -----------------------------------------------------
@@ -134,7 +125,6 @@ export default function App() {
 
       <div className="flex items-center justify-center p-4">
         <Routes>
-
           {/* Landing */}
           <Route path="/" element={<RoleSelect />} />
           <Route path="/choose-rider" element={<ChooseRider />} />
@@ -154,7 +144,7 @@ export default function App() {
             }
           />
 
-          {/* Rider Booking Flow */}
+          {/* Booking Flow */}
           <Route
             path="/booking/confirm"
             element={
@@ -173,19 +163,21 @@ export default function App() {
             }
           />
 
-          {/* DRIVER AUTH */}
+          {/* Driver Login & Register */}
           <Route path="/driver/login" element={<DriverLogin />} />
           <Route path="/driver/register" element={<DriverRegister />} />
+
+          {/* DRIVER AFTER LOGIN → Ride Requests */}
           <Route
             path="/driver/notifications"
             element={
               <ProtectedRoute>
-                  <RideNotifications />
+                <RideNotifications />
               </ProtectedRoute>
             }
           />
 
-          {/* DRIVER PROFILE */}
+          {/* Driver Profile */}
           <Route
             path="/driver/profile"
             element={
@@ -212,7 +204,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
         </Routes>
       </div>
     </div>

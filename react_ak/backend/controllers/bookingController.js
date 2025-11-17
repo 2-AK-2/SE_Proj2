@@ -3,17 +3,20 @@ import bookingModel from "../models/bookingModel.js";
 import db from "../config/db.js";
 
 // -----------------------------------------------------------------------
-// 1️⃣ Rider creates booking → status = 'pending', NO driver assigned
+// 1️⃣ Rider creates a booking → status = 'pending'
 // -----------------------------------------------------------------------
 export const createBooking = async (req, res) => {
   try {
     const riderId = req.user?.id;
-    if (!riderId) return res.status(401).json({ message: "Unauthorized" });
+    if (!riderId)
+      return res.status(401).json({ message: "Unauthorized" });
 
     const { pickup, drop_location, fare, eta } = req.body;
-    if (!pickup || !drop_location)
-      return res.status(400).json({ message: "pickup & drop required" });
 
+    if (!pickup || !drop_location)
+      return res.status(400).json({ message: "pickup and drop_location required" });
+
+    // Create pending ride
     const { bookingId } = await bookingModel.createBooking({
       rider_id: riderId,
       pickup,
@@ -34,17 +37,21 @@ export const createBooking = async (req, res) => {
 };
 
 // -----------------------------------------------------------------------
-// 2️⃣ Rider fetches booking status (used by wait page)
+// 2️⃣ Rider fetches booking status
 // -----------------------------------------------------------------------
 export const getBooking = async (req, res) => {
   try {
     const bookingId = Number(req.params.id);
-    if (!bookingId) return res.status(400).json({ message: "Invalid booking id" });
+    if (!bookingId)
+      return res.status(400).json({ message: "Invalid booking id" });
 
     const booking = await bookingModel.getBookingById(bookingId);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    if (!booking)
+      return res.status(404).json({ message: "Booking not found" });
 
     return res.json(booking);
+
   } catch (err) {
     console.error("❌ getBooking error:", err);
     return res.status(500).json({ message: "Internal server error" });
@@ -52,22 +59,24 @@ export const getBooking = async (req, res) => {
 };
 
 // -----------------------------------------------------------------------
-// 3️⃣ Driver sees ALL pending rides (driver_id NULL)
+// 3️⃣ Driver sees pending ride requests (driver_id NULL)
 // -----------------------------------------------------------------------
 export const getDriverBookings = async (req, res) => {
   try {
     const driverId = req.user?.id;
-    if (!driverId) return res.status(401).json({ message: "Unauthorized" });
+    if (!driverId)
+      return res.status(401).json({ message: "Unauthorized" });
 
     const [rows] = await db.execute(
-      `SELECT r.id, r.pickup, r.drop_location, r.fare, r.status
-       FROM rides r
-       WHERE r.driver_id IS NULL
-       AND r.status = 'pending'
-       ORDER BY r.created_at ASC`
+      `SELECT id, pickup, drop_location, fare, status
+       FROM rides
+       WHERE driver_id IS NULL
+       AND status = 'pending'
+       ORDER BY id DESC`
     );
 
     return res.json(rows);
+
   } catch (err) {
     console.error("❌ getDriverBookings error:", err);
     return res.status(500).json({ message: "Internal server error" });
@@ -75,7 +84,7 @@ export const getDriverBookings = async (req, res) => {
 };
 
 // -----------------------------------------------------------------------
-// 4️⃣ Driver accepts → driver_id set, status = "accepted"
+// 4️⃣ Driver updates booking status → accepted / rejected / completed
 // -----------------------------------------------------------------------
 export const updateBookingStatus = async (req, res) => {
   try {
@@ -90,6 +99,7 @@ export const updateBookingStatus = async (req, res) => {
     if (!allowed.includes(status))
       return res.status(400).json({ message: "Invalid status" });
 
+    // Accept ride = assign driver
     if (status === "accepted") {
       await bookingModel.assignDriver(bookingId, driverId);
     } else {

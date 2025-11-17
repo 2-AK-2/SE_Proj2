@@ -2,33 +2,32 @@
 import axios from "axios";
 import { getToken } from "../utils/authHelper";
 
-// ================================
+// ==========================================
 // 🌐 BASE URL
-// ================================
-const baseURL =
-  process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+// ==========================================
+const baseURL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
-// Create Axios instance
+// Axios instance
 const instance = axios.create({
   baseURL,
   headers: { "Content-Type": "application/json" },
 });
 
-// ================================
-// 🔐 Attach JWT Token Automatically
-// ================================
+// ==========================================
+// 🔐 Automatically attach JWT token
+// ==========================================
 instance.interceptors.request.use(
   (config) => {
     const token = getToken();
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error) => Promise.reject(error)
+  (err) => Promise.reject(err)
 );
 
-// ======================================================
-// 📱 OTP AUTH — Phone-based
-// ======================================================
+// ==========================================
+// 📱 OTP AUTH (Phone)
+// ==========================================
 export const authAPI = {
   sendOtp: async (phone) =>
     (await instance.post("/auth/send-otp", { phone })).data,
@@ -37,9 +36,9 @@ export const authAPI = {
     (await instance.post("/auth/verify-otp", { phone, otp })).data,
 };
 
-// ======================================================
-// 👤 RIDER AUTH — Email + Password
-// ======================================================
+// ==========================================
+// 👤 RIDER AUTH (Email/Password)
+// ==========================================
 export const riderAPI = {
   completeRegistration: async (data) =>
     (await instance.post("/riders/complete-registration", data)).data,
@@ -54,11 +53,9 @@ export const riderAPI = {
     (await instance.get("/riders/profile")).data,
 };
 
-// ======================================================
-// 🚗 DRIVER API — Login, Register, Profile, Password, Notifications
-// ======================================================
-// src/api/api.js
-
+// ==========================================
+// 🚗 DRIVER API
+// ==========================================
 export const driverAPI = {
   register: async (data) =>
     (await instance.post("/driver/register", data)).data,
@@ -66,7 +63,8 @@ export const driverAPI = {
   login: async (data) =>
     (await instance.post("/driver/login", data)).data,
 
-  // FIXED HERE
+  // 🔥 Correct backend route for driver ride requests:
+  // GET /api/driver/rides
   getNotifications: async () =>
     (await instance.get("/driver/rides")).data,
 
@@ -80,10 +78,9 @@ export const driverAPI = {
     (await instance.post("/driver/profile/change-password", data)).data,
 };
 
-
-// ======================================================
+// ==========================================
 // 🚕 Fare Estimator
-// ======================================================
+// ==========================================
 export const fareAPI = {
   estimate: async (pickup, destination) =>
     (
@@ -94,9 +91,9 @@ export const fareAPI = {
     ).data,
 };
 
-// ======================================================
-// 🚕 BOOKING API
-// ======================================================
+// ==========================================
+// 🚕 Booking API
+// ==========================================
 export const bookingAPI = {
   create: async (data) =>
     (await instance.post("/bookings/create", data)).data,
@@ -106,6 +103,15 @@ export const bookingAPI = {
 
   updateStatus: async (id, status) =>
     (await instance.post(`/bookings/${id}/update-status`, { status })).data,
+};
+
+// ==========================================
+// 📍 Driver Live Location API
+// (Your backend has GET /api/location/:id)
+// ==========================================
+export const locationAPI = {
+  getLocation: async (driverId) =>
+    (await instance.get(`/location/${driverId}`)).data,
 };
 
 export default instance;
