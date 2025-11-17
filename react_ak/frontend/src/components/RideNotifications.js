@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { MapPin, Phone, Car } from "lucide-react";
 import { driverAPI, bookingAPI } from "../api/api";
-import { useNavigate } from "react-router-dom";
+//import { useNavigate } from "react-router-dom";
 
 const RideNotifications = () => {
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
   const [rides, setRides] = useState([]);
 
   useEffect(() => {
