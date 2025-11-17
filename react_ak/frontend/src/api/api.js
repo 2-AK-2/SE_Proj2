@@ -55,7 +55,7 @@ export const riderAPI = {
 };
 
 // ======================================================
-// 🚗 DRIVER API (you are not using this now but it's fine)
+// 🚗 DRIVER API (not required now but kept)
 // ======================================================
 export const driverAPI = {
   register: async (formData) =>
@@ -89,7 +89,7 @@ export const fareAPI = {
 };
 
 // ======================================================
-// 🚕 BOOKING API (NEW — MUST HAVE)
+// 🚕 BOOKING API
 // ======================================================
 export const bookingAPI = {
   create: async (data) =>
@@ -99,4 +99,14 @@ export const bookingAPI = {
     (await instance.get(`/bookings/${id}`)).data,
 };
 
+// ======================================================
+// 🌍 DRIVER LIVE LOCATION API (⭐ FIXED ENDPOINT)
+// ======================================================
+export const locationAPI = {
+  // Backend route = GET /api/location/:id
+  getLocation: async (driverId) =>
+    (await instance.get(`/location/${driverId}`)).data,
+};
+
+// Export Axios instance
 export default instance;
