@@ -1,7 +1,7 @@
-// src/components/Driver/RideNotifications.js
+// frontend/src/components/Driver/RideNotifications.js
 import React, { useState, useEffect } from "react";
 import { MapPin, Phone, Car } from "lucide-react";
-import { driverAPI, bookingAPI } from "../../api";
+import { driverAPI, bookingAPI } from "../../api/api";
 
 const RideNotifications = () => {
   const [rides, setRides] = useState([]);

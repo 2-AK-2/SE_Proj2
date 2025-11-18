@@ -11,19 +11,10 @@ import {
 
 const router = express.Router();
 
-// Rider creates a booking
 router.post("/create", verifyToken, createBooking);
-
-// Get booking info
 router.get("/:id", verifyToken, getBooking);
-
-// Driver updates status (accept/reject/complete)
 router.post("/:id/update-status", verifyToken, updateBookingStatus);
-
-// Get driver details for a booking
-router.get("/:id/driver-details", verifyToken, getDriverDetails);
-
-// Payment (mock) — marks booking paid
 router.post("/pay", verifyToken, payForRide);
+router.get("/:id/driver-details", verifyToken, getDriverDetails);
 
 export default router;
