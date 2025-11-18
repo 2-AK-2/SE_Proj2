@@ -1,35 +1,33 @@
 // controllers/driverLocationController.js
 import db from "../config/db.js";
+import driverModel from "../models/driverModel.js";
 
-// Simulated movement function
-function getRandomOffset() {
-  return (Math.random() - 0.5) * 0.001; 
-}
-
-export const getDriverLocation = async (req, res) => {
+// GET current driver location (public)
+export const getDriverLocation = async (req, res, next) => {
   try {
-    const driverId = req.params.id;
+    const driverId = Number(req.params.id);
+    if (!driverId) return res.status(400).json({ message: "Invalid driver id" });
 
-    const [[driver]] = await db.execute(
-      "SELECT id, latitude, longitude FROM drivers WHERE id = ?",
-      [driverId]
-    );
-
+    const driver = await driverModel.findById(driverId);
     if (!driver) return res.status(404).json({ message: "Driver not found" });
 
-    // simulate movement on each request
-    driver.latitude += getRandomOffset();
-    driver.longitude += getRandomOffset();
-
-    // save updated position
-    await db.execute(
-      "UPDATE drivers SET latitude = ?, longitude = ? WHERE id = ?",
-      [driver.latitude, driver.longitude, driverId]
-    );
-
-    res.json(driver);
+    res.json({ id: driver.id, latitude: driver.latitude || 0, longitude: driver.longitude || 0 });
   } catch (err) {
-    console.error("Driver location error:", err);
-    res.status(500).json({ message: "Internal server error" });
+    next(err);
+  }
+};
+
+// POST update driver location (authenticated driver)
+export const updateDriverLocation = async (req, res, next) => {
+  try {
+    const driverId = req.user?.id;
+    const { latitude, longitude } = req.body;
+    if (!driverId) return res.status(401).json({ message: "Unauthorized" });
+    if (typeof latitude !== "number" || typeof longitude !== "number") return res.status(400).json({ message: "latitude & longitude required" });
+
+    await driverModel.updateLocation(driverId, latitude, longitude);
+    res.json({ message: "Location updated" });
+  } catch (err) {
+    next(err);
   }
 };

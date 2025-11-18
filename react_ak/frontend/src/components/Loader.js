@@ -1,3 +1,4 @@
+// src/components/Loader.js
 import React from "react";
 
 const Loader = () => {
@@ -16,16 +17,13 @@ const Loader = () => {
   );
 };
 
-// ✅ Inline keyframes (inject into document once)
-const styleSheet = document.styleSheets[0];
-if (styleSheet && styleSheet.insertRule) {
-  const spinRule =
-    "@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }";
-  try {
-    styleSheet.insertRule(spinRule, styleSheet.cssRules.length);
-  } catch (e) {
-    // silent fail if already added
-  }
+// inject keyframes if not present
+try {
+  const styleSheet = document.styleSheets[0];
+  const spinRule = "@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }";
+  if (styleSheet && styleSheet.insertRule) styleSheet.insertRule(spinRule, styleSheet.cssRules.length);
+} catch (e) {
+  // ignore
 }
 
 export default Loader;

@@ -1,26 +1,20 @@
+// src/components/Rider/Signup.js
 import React, { useState } from "react";
-import { authAPI, riderAPI } from "../api/api";
-import Loader from "./Loader";
+import { authAPI, riderAPI } from "../../api/api";
+import Loader from "../Loader";
 import { useNavigate } from "react-router-dom";
 
 export default function RiderSignup() {
   const navigate = useNavigate();
 
-  // Step states
   const [step, setStep] = useState(1);
-
-  // Form fields
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // -----------------------
-  // STEP 1 — SEND OTP
-  // -----------------------
   const sendOtp = async () => {
     if (!phone.match(/^\d{10}$/)) {
       setMessage("Please enter a valid 10-digit phone number.");
@@ -39,9 +33,6 @@ export default function RiderSignup() {
     }
   };
 
-  // -----------------------
-  // STEP 2 — VERIFY OTP
-  // -----------------------
   const verifyOtp = async () => {
     if (!otp) {
       setMessage("Enter the OTP.");
@@ -60,9 +51,6 @@ export default function RiderSignup() {
     }
   };
 
-  // -----------------------
-  // STEP 3 — COMPLETE REGISTRATION
-  // -----------------------
   const completeRegistration = async () => {
     if (!email || !password) {
       setMessage("Email & password required");
@@ -71,12 +59,7 @@ export default function RiderSignup() {
 
     setLoading(true);
     try {
-      await riderAPI.completeRegistration({
-        phone,
-        email,
-        password,
-      });
-
+      await riderAPI.completeRegistration({ phone, email, password });
       setMessage("🎉 Registration successful!");
       setTimeout(() => navigate("/login"), 600);
     } catch (err) {
@@ -89,12 +72,10 @@ export default function RiderSignup() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-olaGray to-white p-4">
       <div className="bg-white shadow-soft rounded-2xl p-8 w-full max-w-md border border-olaGray">
-
         <h1 className="text-3xl font-bold text-olaBlack text-center mb-6">
           🚖 Cabify Rider Signup
         </h1>
 
-        {/* STEP 1 — Phone */}
         {step === 1 && (
           <>
             <label className="block text-gray-700 mb-1">Phone Number</label>
@@ -115,7 +96,6 @@ export default function RiderSignup() {
           </>
         )}
 
-        {/* STEP 2 — OTP */}
         {step === 2 && (
           <>
             <label className="block text-gray-700 mb-1">Enter OTP</label>
@@ -136,7 +116,6 @@ export default function RiderSignup() {
           </>
         )}
 
-        {/* STEP 3 — Email + Password */}
         {step === 3 && (
           <>
             <label className="block text-gray-700 mb-1">Email</label>

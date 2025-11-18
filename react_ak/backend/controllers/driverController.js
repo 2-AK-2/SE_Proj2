@@ -3,59 +3,50 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import db from "../config/db.js";
 import dotenv from "dotenv";
+import driverModel from "../models/driverModel.js";
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
+const TOKEN_EXPIRES_IN = process.env.TOKEN_EXPIRES_IN || "24h";
 
-// REGISTER DRIVER
-export const registerDriver = async (req, res) => {
+// REGISTER DRIVER (with uploads)
+export const registerDriver = async (req, res, next) => {
   try {
     const { name, email, password, phone } = req.body;
+    if (!name || !email || !password || !phone) return res.status(400).json({ message: "All fields required" });
 
-    if (!name || !email || !password || !phone)
-      return res.status(400).json({ message: "All fields required" });
+    if (!req.files?.license || !req.files?.vehicleDoc) return res.status(400).json({ message: "Documents required" });
 
-    const [existing] = await db.execute(
-      "SELECT id FROM drivers WHERE email = ?",
-      [email]
-    );
+    const license_doc = req.files.license[0].filename;
+    const vehicle_doc = req.files.vehicleDoc[0].filename;
 
-    if (existing.length > 0)
-      return res.status(409).json({ message: "Email already exists" });
+    const existing = await driverModel.findByEmail(email);
+    if (existing) return res.status(409).json({ message: "Email already exists" });
 
-    const hashed = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, 12);
+    const created = await driverModel.create({ name, email, phone, password: hashed, license_doc, vehicle_doc, verified: 0 });
 
-    const [result] = await db.execute(
-      `INSERT INTO drivers (name, email, phone, password, verified)
-       VALUES (?, ?, ?, ?, 1)`,
-      [name, email, phone, hashed]
-    );
-
-    res.json({ message: "Driver registered", id: result.insertId });
-
+    res.status(201).json({ message: "Driver registered (pending verification)", id: created.insertId });
   } catch (err) {
-    console.error("❌ registerDriver:", err);
-    res.status(500).json({ message: "Internal error" });
+    next(err);
   }
 };
 
 // LOGIN DRIVER
-export const loginDriver = async (req, res) => {
+export const loginDriver = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ message: "Email and password required" });
 
-    const [rows] = await db.execute("SELECT * FROM drivers WHERE email = ?", [
-      email
-    ]);
+    const driver = await driverModel.findByEmail(email);
+    if (!driver) return res.status(401).json({ message: "Invalid login" });
 
-    if (!rows.length) return res.status(401).json({ message: "Invalid login" });
-
-    const driver = rows[0];
     const ok = await bcrypt.compare(password, driver.password);
-
     if (!ok) return res.status(401).json({ message: "Invalid login" });
 
-    const token = jwt.sign({ id: driver.id }, JWT_SECRET, { expiresIn: "24h" });
+    if (!driver.verified) return res.status(403).json({ message: "Driver not verified yet" });
+
+    const token = jwt.sign({ id: driver.id, role: "driver" }, JWT_SECRET, { expiresIn: TOKEN_EXPIRES_IN });
 
     res.json({
       token,
@@ -64,107 +55,71 @@ export const loginDriver = async (req, res) => {
         name: driver.name,
         email: driver.email,
         phone: driver.phone,
-      }
+      },
     });
-
   } catch (err) {
-    console.error("❌ login error:", err);
-    res.status(500).json({ message: "Internal error" });
+    next(err);
   }
 };
 
-
-// VIEW PROFILE
-export const getDriverProfile = async (req, res) => {
+export const getDriverProfile = async (req, res, next) => {
   try {
-    const [rows] = await db.execute(
-      `SELECT id, name, email, phone, profile_picture,
-              license_doc, vehicle_doc
-       FROM drivers 
-       WHERE id = ?`,
-      [req.user.id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ message: "Driver not found" });
-    }
-
-    res.json(rows[0]);
+    const driver = await driverModel.findById(req.user.id);
+    if (!driver) return res.status(404).json({ message: "Driver not found" });
+    res.json({
+      id: driver.id,
+      name: driver.name,
+      email: driver.email,
+      phone: driver.phone,
+      profile_picture: driver.profile_picture,
+      license_doc: driver.license_doc,
+      vehicle_doc: driver.vehicle_doc,
+      verified: driver.verified,
+    });
   } catch (err) {
-    console.error("❌ getProfile ERROR:", err);
-    res.status(500).json({ message: "Internal error" });
+    next(err);
   }
 };
 
-
-
-
-// UPDATE PROFILE (name + phone)
-export const updateDriverProfile = async (req, res) => {
+export const updateDriverProfile = async (req, res, next) => {
   try {
     const { name, phone } = req.body;
+    // optionally accept profile_picture file
+    const profile_picture = req.files?.profile_picture ? req.files.profile_picture[0].filename : null;
 
-    await db.execute(
-      `UPDATE drivers SET 
-        name = COALESCE(?, name), 
-        phone = COALESCE(?, phone)
-      WHERE id = ?`,
-      [name, phone, req.user.id]
-    );
-
+    await driverModel.updateProfile(req.user.id, { name, phone, profile_picture });
     res.json({ message: "Profile updated" });
-
   } catch (err) {
-    console.error("❌ updateProfile:", err);
-    res.status(500).json({ message: "Internal error" });
+    next(err);
   }
 };
 
-// CHANGE PASSWORD
-export const changeDriverPassword = async (req, res) => {
+export const changeDriverPassword = async (req, res, next) => {
   try {
     const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword) return res.status(400).json({ message: "Both passwords required" });
 
-    const [rows] = await db.execute(
-      "SELECT password FROM drivers WHERE id = ?",
-      [req.user.id]
-    );
+    const driver = await driverModel.findById(req.user.id);
+    if (!driver) return res.status(404).json({ message: "Driver not found" });
 
-    if (!rows.length)
-      return res.status(404).json({ message: "Driver not found" });
+    const ok = await bcrypt.compare(oldPassword, driver.password);
+    if (!ok) return res.status(400).json({ message: "Old password wrong" });
 
-    const valid = await bcrypt.compare(oldPassword, rows[0].password);
-
-    if (!valid)
-      return res.status(400).json({ message: "Old password wrong" });
-
-    const hashed = await bcrypt.hash(newPassword, 10);
-
-    await db.execute(
-      "UPDATE drivers SET password = ? WHERE id = ?",
-      [hashed, req.user.id]
-    );
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await driverModel.updatePassword(req.user.id, hashed);
 
     res.json({ message: "Password updated" });
-
   } catch (err) {
-    console.error("❌ changePass:", err);
-    res.status(500).json({ message: "Internal error" });
+    next(err);
   }
 };
 
-
-export const getRideRequests = async (req, res) => {
+export const getRideRequests = async (req, res, next) => {
   try {
-    const [rows] = await db.execute(`
-      SELECT *
-      FROM rides
-      WHERE status = 'pending'
-    `);
-
-    res.json(rows);
+    // Later: accept location to filter by nearest
+    const rides = await (await import("../models/bookingModel.js")).default.getPendingRidesNearby();
+    res.json(rides);
   } catch (err) {
-    console.error("❌ getRideRequests:", err);
-    res.status(500).json({ message: "Internal error" });
+    next(err);
   }
 };

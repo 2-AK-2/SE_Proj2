@@ -1,6 +1,7 @@
+// src/pages/Rider/BookingDetails.js
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { bookingAPI } from "../api/api";
+import { bookingAPI } from "../../api/api";
 
 export default function BookingDetails() {
   const { id } = useParams();
@@ -19,15 +20,11 @@ export default function BookingDetails() {
     load();
   }, [id]);
 
-  if (!booking)
-    return <p className="text-center text-gray-500">Loading booking...</p>;
+  if (!booking) return <p className="text-center text-gray-500">Loading booking...</p>;
 
   return (
     <div className="bg-white shadow-soft rounded-2xl p-8 w-full max-w-md border border-olaGray">
-
-      <h2 className="text-3xl font-bold text-olaBlack mb-6 text-center">
-        Booking Details
-      </h2>
+      <h2 className="text-3xl font-bold text-olaBlack mb-6 text-center">Booking Details</h2>
 
       <div className="space-y-2">
         <p><strong>Pickup:</strong> {booking.pickup}</p>
@@ -45,9 +42,7 @@ export default function BookingDetails() {
           Track Driver
         </button>
       ) : (
-        <p className="mt-4 text-center text-gray-600">
-          Searching for a driver...
-        </p>
+        <p className="mt-4 text-center text-gray-600">Searching for a driver...</p>
       )}
     </div>
   );

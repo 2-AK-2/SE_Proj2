@@ -1,15 +1,16 @@
 import React, { useState } from "react";
-import { driverAPI } from "../api/api";
+import { driverAPI } from "../../api/api";
 import { useNavigate } from "react-router-dom";
-import Loader from "./Loader";
+import Loader from "../Loader";
 
-const DriverRegister = () => {
+export default function DriverRegister() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
     email: "",
+    phone: "",
     password: "",
     license: null,
     vehicleDoc: null,
@@ -38,7 +39,6 @@ const DriverRegister = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-olaGray to-white p-4">
-
       <div className="bg-white shadow-soft rounded-2xl p-8 w-full max-w-md border border-olaGray text-center">
         <h2 className="text-3xl font-bold text-olaBlack mb-2">Driver Registration</h2>
         <p className="text-gray-600 mb-6">Join and start earning!</p>
@@ -58,6 +58,14 @@ const DriverRegister = () => {
             required
             className="w-full border border-gray-300 rounded-lg p-3"
             onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
+
+          <input
+            type="text"
+            placeholder="Phone Number"
+            required
+            className="w-full border border-gray-300 rounded-lg p-3"
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
           />
 
           <input
@@ -111,6 +119,4 @@ const DriverRegister = () => {
       </div>
     </div>
   );
-};
-
-export default DriverRegister;
+}
