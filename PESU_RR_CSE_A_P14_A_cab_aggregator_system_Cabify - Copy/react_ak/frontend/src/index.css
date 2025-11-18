@@ -1,0 +1,19 @@
+/* src/index.css */
+/* Tailwind directives (you already have tailwind set up) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global tweaks */
+@layer base {
+  body {
+    @apply bg-olaGray text-olaBlack;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Keep your previous App styles (if any) */
+.App { text-align: center; }
