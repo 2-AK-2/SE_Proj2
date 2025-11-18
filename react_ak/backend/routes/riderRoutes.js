@@ -1,22 +1,23 @@
+// backend/routes/riderRoutes.js
 import express from "express";
 import {
   loginRider,
   registerRider,
   getProfile,
-  completeRiderRegistration,   // ✅ ADDED IMPORT
+  completeRiderRegistration,
 } from "../controllers/riderController.js";
 
 import { verifyToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Email-password registration (unused now)
+// Email-password registration (optional)
 router.post("/register", registerRider);
 
-// Final step after OTP → email + password
-router.post("/complete-registration", completeRiderRegistration);   // ✅ FIXED
+// Finalize after OTP (phone was verified earlier)
+router.post("/complete-registration", completeRiderRegistration);
 
-// Login
+// Login (email/password)
 router.post("/login", loginRider);
 
 // Protected profile

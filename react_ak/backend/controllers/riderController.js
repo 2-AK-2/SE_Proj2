@@ -1,4 +1,4 @@
-// controllers/riderController.js
+// backend/controllers/riderController.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import riderModel from "../models/riderModel.js";
@@ -11,9 +11,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "cabify_dev_secret";
 const TOKEN_EXPIRES_IN = process.env.TOKEN_EXPIRES_IN || "2h";
 
 /* ============================================================
-   1️⃣ LEGACY EMAIL + PASSWORD REGISTRATION (OPTIONAL)
-   (Used ONLY if you still expose /riders/register)
-=============================================================== */
+   1️⃣ Email + Password Registration (optional)
+   ============================================================ */
 export const registerRider = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -49,8 +48,8 @@ export const registerRider = async (req, res) => {
 };
 
 /* ============================================================
-   2️⃣ LOGIN (Email + Password)
-=============================================================== */
+   2️⃣ Login (Email + Password)
+   ============================================================ */
 export const loginRider = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -85,23 +84,22 @@ export const loginRider = async (req, res) => {
 };
 
 /* ============================================================
-   3️⃣ GET PROFILE (JWT Protected)
-=============================================================== */
+   3️⃣ Get Profile (JWT protected)
+   ============================================================ */
 export const getProfile = async (req, res) => {
   try {
     const userId = req.user?.id;
-    if (!userId)
-      return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     const rider = await riderModel.findById(userId);
-    if (!rider)
-      return res.status(404).json({ message: "Rider not found" });
+    if (!rider) return res.status(404).json({ message: "Rider not found" });
 
     res.json({
       rider: {
         id: rider.id,
         name: rider.name,
         email: rider.email,
+        phone: rider.phone || null,
       },
     });
   } catch (err) {
@@ -111,10 +109,10 @@ export const getProfile = async (req, res) => {
 };
 
 /* ============================================================
-   4️⃣ COMPLETE REGISTRATION (AFTER OTP)
-   Phone → Verified via OTP
-   Email + Password → Stored here
-=============================================================== */
+   4️⃣ COMPLETE REGISTRATION (after OTP verification)
+   - This is the function causing the import error previously.
+   - Exposed as named export `completeRiderRegistration`
+   ============================================================ */
 export const completeRiderRegistration = async (req, res) => {
   try {
     const { phone, email, password } = req.body;
@@ -122,7 +120,7 @@ export const completeRiderRegistration = async (req, res) => {
     if (!phone || !email || !password)
       return res.status(400).json({ message: "All fields required" });
 
-    // Step 1: confirm OTP created rider with phone
+    // Step 1: confirm OTP-created rider exists
     const [phoneCheck] = await db.execute(
       "SELECT id FROM riders WHERE phone = ?",
       [phone]
@@ -132,17 +130,17 @@ export const completeRiderRegistration = async (req, res) => {
       return res.status(400).json({ message: "Phone not verified" });
 
     // Step 2: ensure email not in use
-    const existing = await riderModel.findByEmail(email);
+    const existing = await riderModel.findByEmail(email.toLowerCase());
     if (existing)
       return res.status(409).json({ message: "Email already registered" });
 
     // Step 3: hash password
     const hashed = await bcrypt.hash(password, 10);
 
-    // Step 4: update rider row
+    // Step 4: update rider row (set email + password)
     await db.execute(
-      "UPDATE riders SET email=?, password=? WHERE phone=?",
-      [email, hashed, phone]
+      "UPDATE riders SET email = ?, password = ? WHERE phone = ?",
+      [email.toLowerCase(), hashed, phone]
     );
 
     res.json({ message: "Registration completed successfully" });

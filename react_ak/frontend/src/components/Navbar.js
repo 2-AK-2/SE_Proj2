@@ -2,7 +2,8 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
-  getToken,
+  getRiderToken,
+  getDriverToken,
   removeRiderToken,
   removeDriverToken
 } from "../utils/authHelper";
@@ -11,7 +12,7 @@ export default function Navbar() {
   const nav = useNavigate();
   const location = useLocation();
 
-  const token = getToken();
+  const token = getRiderToken() || getDriverToken();
   const isLoggedIn = !!token;
 
   const isDriver = location.pathname.startsWith("/driver");
@@ -35,8 +36,6 @@ export default function Navbar() {
 
       {isLoggedIn && (
         <div className="flex items-center gap-4">
-
-          {/* ADD THIS → SHOW RIDE REQUEST PAGE BUTTON */}
           {isDriver && (
             <>
               <button
